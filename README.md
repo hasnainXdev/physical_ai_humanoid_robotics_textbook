@@ -25,7 +25,7 @@ To get started with local development, follow these steps:
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/your-username/physical-ai-humanoid-robotics-textbook.git
+    git clone https://github.com/hasnainXdev/physical_ai_humanoid_robotics_textbook.git
     cd physical-ai-humanoid-robotics-textbook/physical-ai-book
     ```
 
