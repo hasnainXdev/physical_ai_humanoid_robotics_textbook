@@ -1,0 +1,104 @@
+---
+id: 01-introduction
+title: "Introduction to NVIDIA Isaac Sim"
+sidebar_label: "Introduction"
+---
+
+import Mermaid from '@site/src/components/Mermaid';
+
+
+## 1. Beyond Gaming Engines: The Rise of Specialized Simulators
+
+While game engines like Unity provide stunning visual fidelity, the world of robotics simulation has seen the emergence of highly specialized tools built from the ground up for AI and robotics. **NVIDIA's Isaac Sim** is a premier example of this new generation of simulators.
+
+Isaac Sim is a scalable robotics simulation application and synthetic data generation tool that powers the NVIDIA Isaac™ robotics platform. It is built on **NVIDIA Omniverse™**, a platform for 3D simulation and collaboration. This foundation gives Isaac Sim several key advantages over traditional simulators.
+
+### Key Features and Advantages of Isaac Sim:
+
+-   **PhysX 5**: It is powered by NVIDIA's advanced PhysX 5 physics engine, enabling highly realistic and scalable physics simulation, including rigid and soft body dynamics, and vehicle physics.
+-   **Real-Time Ray Tracing**: Leveraging NVIDIA's RTX technology, Isaac Sim can produce photorealistic images and sensor data by simulating the physical behavior of light. This is a game-changer for training and testing vision-based AI.
+-   **Direct ROS/ROS 2 Integration**: Isaac Sim offers seamless, high-performance integration with ROS and ROS 2. Sensor data can be published and robot commands can be subscribed to directly within the simulation, without the need for custom bridges.
+-   **Python-First Workflow**: The entire simulator is controllable through Python scripting. This makes it incredibly powerful for automating simulation scenarios, generating synthetic data, and integrating with AI frameworks like PyTorch and TensorFlow.
+-   **Synthetic Data Generation (SDG)**: Isaac Sim is designed with SDG as a core feature. It provides tools to systematically randomize simulation parameters—a technique called **domain randomization**—to create massive, diverse datasets for training robust perception models.
+
+---
+
+## 2. Isaac Sim in the Robotics Ecosystem
+
+Isaac Sim is not just a simulator; it's a central piece of NVIDIA's broader robotics platform.
+
+<Mermaid chart={`
+graph TD
+    subgraph NVIDIA Omniverse Platform
+        A[Isaac Sim]
+    end
+
+    subgraph AI & Perception
+        B[Synthetic Data Generation] --> C{Train ML Models};
+        A --> B;
+    end
+
+    subgraph ROS/ROS 2 Ecosystem
+        D[Isaac ROS Gems]
+        E[ROS 2 Nodes]
+    end
+
+    subgraph Robot Software
+        C --> F[Perception Stack];
+        F --> G[Navigation Stack (Nav2)];
+        G --> H[Manipulation Stack (MoveIt)];
+    end
+
+    A -- "High-Performance Bridge" --> E;
+    D -- "GPU-Accelerated Packages" --> E;
+    E -- Controls --> A;
+`} />
+
+-   **Isaac ROS Gems**: NVIDIA provides a collection of hardware-accelerated ROS 2 packages for common robotics tasks like SLAM, localization, and perception. These are designed to be tested and validated within Isaac Sim.
+-   **AI Model Training**: You use Isaac Sim to generate synthetic data, which is then used to train your AI models.
+-   **Sim-to-Real**: The trained models are deployed as part of your ROS 2 application. Because the simulation was so realistic, the goal is for the AI to work on the real robot with minimal fine-tuning. This workflow is known as **"Sim-to-Real."**
+
+---
+
+## 3. Core Concepts in Isaac Sim
+
+### The Stage (USD)
+Isaac Sim is built on Pixar's **Universal Scene Description (USD)**. USD is a powerful framework for describing, composing, and collaborating on 3D scenes. Think of it as the "HTML of 3D." Every object, light, and sensor in an Isaac Sim scene is a **Prim** (primitive) on the USD Stage.
+
+### Python Scripting with `omni.kit`
+You interact with the simulation programmatically using Python scripts. The core Isaac Sim APIs allow you to:
+-   Load robot and environment assets (USD, URDF).
+-   Control the simulation (play, pause, stop).
+-   Manipulate objects on the stage (move, rotate, scale).
+-   Subscribe to physics events (e.g., collisions).
+-   Attach sensors and publish their data.
+-   Integrate with ROS 2.
+
+### Example: Spawning a Robot from a URDF
+
+```python
+import omni.isaac.core.utils.prims as prim_utils
+from omni.isaac.core.robots import Robot
+from omni.importer.urdf import _urdf
+
+# Get the URDF importer config
+urdf_config = _urdf.ImportConfig()
+urdf_config.merge_fixed_joints = False
+urdf_config.convex_decomp = False
+urdf_config.fix_base = True
+
+# Import the URDF file
+prim_utils.create_prim(
+    prim_path="/World/MyHumanoid",
+    prim_type="Xform",
+    usd_path="/path/to/my_humanoid.urdf",
+    import_config=urdf_config,
+)
+
+# Add a Robot API to the imported prim
+my_robot = Robot(prim_path="/World/MyHumanoid", name="MyHumanoid")
+```
+
+## Conclusion
+
+NVIDIA Isaac Sim represents a significant leap forward in robotics simulation. By combining a powerful physics engine, photorealistic rendering, and a Python-first design, it provides an unparalleled platform for developing the "AI brain" of a robot. It is particularly well-suited for modern, AI-driven robotics where high-quality sensor data is the lifeblood of the system. In the following chapters, we will explore how to leverage Isaac Sim for generating synthetic data, integrating with ROS 2 for advanced navigation, and ultimately, building a complete perception and navigation stack for our humanoid robot.

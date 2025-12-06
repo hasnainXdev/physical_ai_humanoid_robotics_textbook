@@ -1,0 +1,61 @@
+---
+title: "Introduction to ROS 2"
+sidebar_position: 1
+---
+
+import Mermaid from '@theme/Mermaid';
+
+# Module 1: ROS 2 - The Central Nervous System of Your Robot
+
+## 1.1 Introduction to ROS 2
+
+Welcome to the foundational module of our journey into Physical AI. Before we can make our humanoid robots see, think, and act, we need to build their central nervous system. In modern robotics, that nervous system is the **Robot Operating System (ROS)**. Specifically, we will be using **ROS 2**, the next-generation platform designed for modern hardware, multi-robot systems, and production-grade applications.
+
+### What is ROS?
+
+ROS is not a traditional operating system like Windows or Linux. Instead, it's a **meta-operating system**—a flexible framework and a collection of tools, libraries, and conventions that aim to simplify the task of creating complex and robust robot behavior.
+
+Think of it as a plumbing system for your robot. It allows different parts of your robot's software—perception, planning, control, and hardware drivers—to communicate with each other seamlessly, regardless of what programming language they are written in or where they are running.
+
+<Mermaid chart={`
+graph TD
+    A[Perception] -- Camera Data --> B(ROS 2 Middleware);
+    C[Planning] -- Goal --> B;
+    B -- Commands --> D[Actuation];
+    E[Hardware Drivers] -- Sensor Data --> B;
+    style B fill:#f9f,stroke:#333,stroke-width:2px;
+`} />
+
+### Why ROS 2?
+
+ROS 1, the original version, revolutionized robotics research and development. However, as robotics moved from the lab to the real world, its limitations became apparent. ROS 2 was redesigned from the ground up to meet the demands of commercial products and complex autonomous systems.
+
+Key advantages of ROS 2 include:
+
+| Feature                  | Description                                                                                                                              | Why It Matters for Humanoid Robotics                                                                                           |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Real-Time Support**    | ROS 2 is built on top of DDS (Data Distribution Service), a standard for real-time systems, allowing for predictable and reliable communication. | Essential for controlling humanoid balance and executing precise movements where microsecond timing is critical.               |
+| **Multi-Robot Systems**  | Native support for discovering and communicating with multiple robots on the same network without a central master node.                 | Enables coordination between multiple humanoids or between a humanoid and other autonomous agents.                           |
+| **Enhanced Security**    | The ROS 2 Security (SROS 2) features provide a framework for authentication, encryption, and access control.                             | Crucial for preventing unauthorized access to your robot, especially when it's connected to a network or the internet.      |
+| **Lifecycle Management** | Nodes (ROS 2 processes) have a defined lifecycle, allowing for deterministic startup, shutdown, and management of your robot's software. | Ensures your humanoid robot starts up and shuts down safely and predictably, preventing erratic behavior.                  |
+| **Cross-Platform**       | Officially supports Linux, macOS, and Windows.                                                                                           | Provides flexibility in your development and deployment environment.                                                           |
+| **Commercial Support**   | Backed by major industry players and designed for production environments.                                                               | Gives you confidence in building commercial-grade applications on a stable and well-supported platform.                      |
+
+### The Core Philosophy of ROS: Distributed and Modular
+
+The power of ROS lies in its distributed and modular architecture. A robot's software is broken down into many small, independent programs called **nodes**.
+
+-   A **Perception Node** might process data from a camera.
+-   A **Navigation Node** might plan a path.
+-   A **Motor Control Node** might send commands to the robot's joints.
+
+These nodes communicate with each other by publishing and subscribing to **topics** or by calling **services**. This decoupling is incredibly powerful. You can restart, replace, or upgrade one node without affecting the others. You can run nodes on different computers. You can even mix nodes written in Python, C++, and other languages.
+
+For a humanoid robot, this means you can have:
+-   A high-performance C++ node for real-time balance control.
+-   A Python node leveraging powerful AI libraries for voice recognition.
+-   A separate computer processing vision data from a GPU.
+
+All these components can work together harmoniously through the ROS 2 framework.
+
+In the upcoming chapters, we will dive deeper into the core concepts of ROS 2, set up our development environment, and start building the software that will bring our humanoid robot to life.

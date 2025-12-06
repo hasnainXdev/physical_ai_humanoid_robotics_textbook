@@ -1,0 +1,117 @@
+---
+id: 04-unity-rendering
+title: "High-Fidelity Rendering with Unity"
+sidebar_label: "Unity Rendering"
+---
+
+import Mermaid from '@site/src/components/Mermaid';
+
+
+## 1. Why Unity for Robotics Simulation?
+
+While Gazebo is a powerful and ROS-native simulator, its primary focus is on physics simulation and sensor data generation. When it comes to visual fidelity, game engines like Unity offer a significant advantage. Unity's advanced rendering capabilities are designed to create photorealistic and visually immersive experiences, which is becoming increasingly important in robotics.
+
+### Key Advantages of Unity for Robotics:
+
+-   **Photorealism**: Unity's High Definition Render Pipeline (HDRP) and Universal Render Pipeline (URP) can produce stunningly realistic visuals. This is critical for training and testing computer vision models that will be deployed in the real world.
+-   **Asset Ecosystem**: The Unity Asset Store provides a massive library of high-quality 3D models, textures, and environments, allowing you to build complex and realistic simulation worlds quickly.
+-   **C# Scripting**: Unity uses C# for scripting, a powerful and modern object-oriented language that is excellent for developing complex simulation logic.
+-   **Cross-Platform**: Unity simulations can be deployed on a wide range of platforms, including Windows, macOS, and Linux.
+-   **ROS 2 Integration**: With the [Unity Robotics Hub](https://github.com/Unity-Technologies/Unity-Robotics-Hub), you can integrate your Unity simulation with ROS 2, allowing for seamless communication between your high-level AI (in ROS 2) and your high-fidelity simulation (in Unity).
+
+---
+
+## 2. Setting Up a Unity Project for Robotics
+
+### Step 1: Install Unity Hub and Unity Editor
+Download and install Unity Hub, which allows you to manage multiple Unity Editor versions. For robotics, it's recommended to use a Long-Term Support (LTS) version.
+
+### Step 2: Create a New 3D HDRP Project
+Create a new project using the "3D (HDRP)" template. The High Definition Render Pipeline is optimized for creating high-fidelity graphics on powerful hardware.
+
+### Step 3: Import the Unity Robotics Hub
+Download and import the latest `Unity.Robotics.ROS2` package from the Unity Robotics Hub GitHub repository. This package provides the necessary tools to connect your Unity scene to a ROS 2 network.
+
+### Step 4: Configure the ROS 2 Connection
+In Unity, you can configure the ROS 2 settings, such as the ROS Domain ID, to match your ROS 2 network. You'll typically have a ROS 2 TCP endpoint that the Unity simulation connects to.
+
+---
+
+## 3. Creating a Visually Rich Environment
+
+The power of Unity lies in its ability to create realistic scenes.
+
+-   **Lighting**: Use Global Illumination, real-time shadows, and reflection probes to create lighting that mimics the real world. HDRP provides advanced tools for physically-based lighting.
+-   **Materials and Textures**: Use Physically Based Rendering (PBR) materials to define how light interacts with surfaces. High-resolution textures will make objects look realistic up close.
+-   **Post-Processing**: Apply post-processing effects like bloom, depth of field, and color grading to enhance the cinematic quality of your simulation.
+-   **Terrain and Foliage**: Unity's tools for creating terrain, trees, and grass can be used to build realistic outdoor environments for your humanoid to navigate.
+
+### Unity High Definition Render Pipeline (HDRP)
+
+<Mermaid chart={`
+graph TD
+    A[3D Scene (Models, Materials)] --> B{Culling};
+    B --> C{Lighting & Shadows};
+    C --> D{Render Geometries};
+    D --> E[Render Target (Framebuffer)];
+    E --> F{Post-Processing};
+    F -- Effects (Bloom, Color Grading) --> G[Final 2D Image];
+    G --> H((ROS 2 Image Topic));
+`} />
+
+
+---
+
+## 4. Importing and Configuring a Humanoid Robot
+
+You can import your humanoid robot model (e.g., from an FBX or OBJ file) into Unity.
+
+### ArticulationBody Components
+For physics-driven motion that is stable and realistic for robotic joints, Unity provides the `ArticulationBody` component. Unlike traditional `RigidBody` components, `ArticulationBody` is designed for a tree-like hierarchy of bodies connected by joints, which is exactly what a robot is.
+
+-   You will add an `ArticulationBody` component to each link of your robot.
+-   Configure the joints (e.g., `Revolute`, `Prismatic`) to define their motion and limits.
+-   You can apply forces or set target positions for the joints in your C# scripts to control the robot.
+
+### Example C# Script for Joint Control
+
+```csharp
+using UnityEngine;
+using Unity.Robotics.ROSTCPConnector;
+using RosMessageTypes.Std;
+
+public class JointController : MonoBehaviour
+{
+    private ArticulationBody articulation;
+    ROSConnection ros;
+
+    void Start()
+    {
+        articulation = GetComponent<ArticulationBody>();
+        ros = ROSConnection.GetOrCreateInstance();
+        ros.Subscribe<Float32Msg>("/joint_target", SetJointTarget);
+    }
+
+    void SetJointTarget(Float32Msg targetMsg)
+    {
+        var drive = articulation.xDrive;
+        drive.target = targetMsg.data;
+        articulation.xDrive = drive;
+    }
+}
+```
+This script listens to a ROS 2 topic `/joint_target` and sets the target angle of the joint it's attached to.
+
+---
+
+## 5. Connecting High-Fidelity Rendering to AI Pipelines
+
+The primary reason to use a high-fidelity renderer like Unity is to generate realistic sensor data for your AI.
+
+-   **Simulated Cameras**: You can place cameras in your Unity scene that render from the robot's perspective. The output of these cameras can be published as `sensor_msgs/Image` messages to a ROS 2 topic.
+-   **Synthetic Data Generation**: Because you have full control over the environment, you can systematically vary lighting conditions, object positions, and textures. This is called **domain randomization**. It allows you to generate a vast and diverse dataset of synthetic images to train computer vision models that are more robust and generalize better to the real world.
+-   **Ground Truth**: The simulator provides perfect "ground truth" data. For object detection, you get precise 2D and 3D bounding boxes for free. For semantic segmentation, you get perfect pixel-level masks. This is extremely valuable for training and validating your perception algorithms.
+
+## Conclusion
+
+Unity, with its state-of-the-art rendering engine and the ROS 2 integration provided by the Unity Robotics Hub, offers a compelling platform for creating digital twins of humanoid robots. It excels where visual fidelity is paramount, enabling the development and validation of sophisticated AI and computer vision systems in a simulated environment that closely mirrors the complexity and appearance of the real world.

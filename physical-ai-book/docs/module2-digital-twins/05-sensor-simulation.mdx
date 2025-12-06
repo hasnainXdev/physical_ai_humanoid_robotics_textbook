@@ -1,0 +1,74 @@
+---
+id: 05-sensor-simulation
+title: "Sensor Simulation"
+sidebar_label: "Sensor Simulation"
+---
+
+import Mermaid from '@theme/Mermaid';
+
+## 1. The Role of Sensors in Robotics
+
+Sensors are the robot's "senses"—its way of perceiving the world. For a humanoid robot to operate autonomously, it must be equipped with a rich suite of sensors to understand its own state and the state of its environment. In a digital twin, simulating these sensors accurately is just as important as simulating the robot's physical body.
+
+The goal of sensor simulation is to generate data that is as close as possible to the data that would be produced by the real-world sensor. This allows you to develop and test your robot's perception and control software entirely in simulation.
+
+### The Perception Pipeline
+
+<Mermaid chart={`
+graph TD
+    A[Real or Simulated World] --> B{Sensor};
+    B -- Raw Data --> C[Driver/Plugin];
+    C -- Publishes ROS 2 Message --> D((Topic));
+    D --> E[Perception Node];
+    E -- Processed Information --> F[Higher-Level AI];
+`} />
+
+The simulator's job is to replace the "Real World" and the physical "Sensor" with a virtual equivalent that produces the same kind of "Raw Data."
+
+---
+
+## 2. Common Sensors for Humanoid Robots and Their Simulation
+
+### LiDAR (Light Detection and Ranging)
+
+-   **What it does**: Measures distances to objects by emitting laser beams and measuring the time it takes for the light to reflect back. It produces a "point cloud" representing the 3D structure of the environment.
+-   **Use in Humanoids**: Crucial for mapping (SLAM), localization, and obstacle avoidance.
+-   **Simulation in Gazebo**: Gazebo has excellent support for LiDAR simulation. You can add a `ray` sensor to your URDF and configure its parameters (range, resolution, field of view, noise). The `gazebo_ros_ray_sensor` plugin will then publish the simulated point cloud as a `sensor_msgs/LaserScan` or `sensor_msgs/PointCloud2` message.
+-   **Simulation in Unity**: You can simulate LiDAR by casting many rays into the physics scene and recording the hit points. The Unity Robotics Hub provides scripts to help with this.
+
+### Depth Cameras
+
+-   **What it does**: Similar to a regular camera, but for each pixel, it also provides the distance to the object in that pixel. It generates a "depth image" and a "point cloud."
+-   **Use in Humanoids**: Object recognition, scene understanding, and close-range obstacle avoidance.
+-   **Simulation in Gazebo**: The `depth_camera` sensor in Gazebo can be added to your URDF. It uses the GPU to render a depth image from the camera's perspective. The `gazebo_ros_depth_camera` plugin publishes the depth image and point cloud to ROS 2 topics.
+-   **Simulation in Unity**: Unity's camera can render a depth texture, which can then be processed and published as a ROS 2 message. High-fidelity rendering in Unity can produce very realistic depth data.
+
+### IMU (Inertial Measurement Unit)
+
+-   **What it does**: Measures the robot's orientation, angular velocity, and linear acceleration. It typically combines data from an accelerometer, a gyroscope, and sometimes a magnetometer.
+-   **Use in Humanoids**: Essential for balance and stabilization. The IMU is the primary sensor for the robot's state estimation and control loops that keep it from falling over.
+-   **Simulation in Gazebo**: The `imu` sensor can be added to a link in your URDF. The `gazebo_ros_imu_sensor` plugin will read the link's simulated motion from the physics engine and publish it as a `sensor_msgs/Imu` message. It can also simulate noise and drift, which are common imperfections in real IMUs.
+-   **Simulation in Unity**: You can get the orientation and velocity of the `ArticulationBody` or `RigidBody` component of the link the IMU is attached to and publish this data.
+
+### Cameras (RGB Cameras)
+
+-   **What it does**: Provides a standard color image of the world.
+-   **Use in Humanoids**: Object recognition, human detection and tracking, reading text, visual servoing, and providing a teleoperation view for a human operator.
+-   **Simulation in Gazebo**: The `camera` sensor in Gazebo renders the scene from its perspective. The `gazebo_ros_camera` plugin publishes the images as `sensor_msgs/Image` messages.
+-   **Simulation in Unity**: This is where Unity excels. You can create a camera in Unity, attach it to your robot, and render photorealistic images. These can be published to ROS 2 for your computer vision pipeline. This is the core of synthetic data generation.
+
+---
+
+## 3. Adding Noise and Imperfections
+
+Real-world sensors are not perfect. They have noise, biases, and limited resolution. A good simulation must model these imperfections to ensure that the software you develop is robust enough to handle them.
+
+-   **Noise**: Most sensor plugins in Gazebo allow you to add Gaussian noise to the sensor readings. You can configure the mean and standard deviation of the noise.
+-   **Drift**: For sensors like IMUs, a small bias can accumulate over time, causing the orientation estimate to "drift." This can also be modeled in simulation.
+-   **Limited Range and Field of View**: Every sensor has physical limits. Your simulation must respect these limits (e.g., a LiDAR can't see through walls or measure distances beyond its maximum range).
+
+By training and testing your perception algorithms on simulated data that includes these real-world imperfections, you create a system that is far more likely to work when deployed on the physical robot. This is a key principle of creating an effective digital twin.
+
+## Conclusion
+
+Accurate sensor simulation is the bridge that connects your robot's "brain" (its software) to its simulated world. By carefully modeling the sensors your humanoid robot will use—from cameras and LiDAR to the critical IMU—and by including realistic imperfections, you can develop and validate your entire perception and control stack in the digital twin before ever turning on the real hardware.

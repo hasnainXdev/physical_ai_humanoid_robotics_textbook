@@ -1,0 +1,111 @@
+```yaml
+# This is a sample Nav2 configuration file for a humanoid robot.
+# It demonstrates key parameters that would need to be tuned for a humanoid platform.
+
+robot_base_frame: base_link
+o_dom_frame: odom
+map_frame: map
+
+### General Controller and Planner Settings ###
+
+controller_server:
+  ros__parameters:
+    controller_plugins:
+      - follow_path: "nav2_mppi_controller::MPPIController"
+    
+    follow_path:
+      # MPPI Controller specific parameters - tune for humanoid gait and stability
+      robot_radius: 0.35 # Approximate radius of the humanoid (e.g., considering arm span)
+      inflation_layer.inflate_unknown: true
+      costmap_topic: local_costmap/costmap_raw
+      # ... other MPPI controller parameters ...
+
+planner_server:
+  ros__parameters:
+    planner_plugins:
+      - grid_path: "nav2_navfn_planner::NavfnPlanner"
+    
+    grid_path:
+      # NavFn Planner specific parameters
+      tolerance: 0.5 # How close to goal to consider it reached
+      use_astar: true
+
+### Costmap Configuration (Global and Local) ###
+
+local_costmap:
+  ros__parameters:
+    update_frequency: 5.0
+    publish_frequency: 2.0
+    global_frame: odom
+    robot_base_frame: base_link
+    # Dimensions of the local costmap - adjust for humanoid's immediate surroundings
+    width: 3.0
+    height: 3.0
+    resolution: 0.05
+    plugins:
+      - name: static_layer
+        plugin: "nav2_costmap_2d::StaticLayer"
+      - name: obstacle_layer
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+      - name: inflation_layer
+        plugin: "nav2_costmap_2d::InflationLayer"
+
+    static_layer:
+      map_subscribe_topic: /map
+
+    obstacle_layer:
+      # Sensor sources for obstacle detection - adapt to humanoid's sensors
+      observation_sources: laser_scan_sensor point_cloud_sensor
+      laser_scan_sensor:
+        topic: /scan
+        max_obstacle_height: 1.5 # Humanoid height consideration
+        data_type: LaserScan
+        clearing: true
+        marking: true
+        # ... other laser scan parameters ...
+      point_cloud_sensor:
+        topic: /point_cloud
+        max_obstacle_height: 1.5
+        data_type: PointCloud2
+        clearing: true
+        marking: true
+        # ... other point cloud parameters ...
+
+    inflation_layer:
+      inflation_radius: 0.5 # Adjust based on humanoid's footprint and safety margin
+      cost_scaling_factor: 3.0
+
+global_costmap:
+  ros__parameters:
+    update_frequency: 1.0
+    publish_frequency: 1.0
+    global_frame: map
+    robot_base_frame: base_link
+    # Dimensions of the global costmap - adjust as needed for the environment
+    width: 50.0
+    height: 50.0
+    resolution: 0.05
+    track_unknown_space: true
+    plugins:
+      - name: static_layer
+        plugin: "nav2_costmap_2d::StaticLayer"
+      - name: inflation_layer
+        plugin: "nav2_costmap_2d::InflationLayer"
+
+    static_layer:
+      map_subscribe_topic: /map
+
+    inflation_layer:
+      inflation_radius: 0.5
+      cost_scaling_factor: 3.0
+
+### Behavior Tree Navigator ###
+
+bt_navigator:
+  ros__parameters:
+    # Default behavior tree XML file - can be customized for humanoid-specific behaviors
+    default_bt_xml: "$(find nav2_bt_navigator)/behavior_trees/navigate_w_replanning_and_recovery.xml"
+    # ... other behavior tree parameters ...
+
+# ... Additional configurations for smoother humanoid movement, e.g., via specialized controllers ...
+```

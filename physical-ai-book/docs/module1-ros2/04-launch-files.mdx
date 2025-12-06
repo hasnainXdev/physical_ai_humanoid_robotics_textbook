@@ -1,0 +1,223 @@
+---
+id: 04-launch-files
+title: "ROS 2 Launch Files"
+sidebar_label: "Launch Files"
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import Mermaid from '@theme/Mermaid';
+
+## 1. Introduction to ROS 2 Launch Files
+
+In ROS 2, managing a complex system with multiple nodes can be cumbersome if you have to run each node in a separate terminal. ROS 2 launch files provide a powerful and flexible way to start and configure multiple nodes and their parameters from a single file. This simplifies the process of running a complete robotics application and makes your system more organized and reproducible.
+
+Launch files in ROS 2 are Python scripts, which gives you the full power of the Python programming language to create complex and dynamic launch configurations.
+
+### Key Concepts
+
+- **Package**: A container for your ROS 2 code, including nodes, launch files, and other resources.
+- **Node**: A single, executable process in a ROS 2 system that performs a specific task.
+- **Executable**: The compiled code that a node runs.
+- **Topic**: A named bus over which nodes exchange messages.
+- **Service**: A request/response communication paradigm between nodes.
+- **Action**: A long-running, goal-oriented communication paradigm.
+- **Parameter**: A configurable value that a node can use to modify its behavior.
+
+## 2. Creating a Simple Launch File
+
+Let's create a basic launch file that starts a single ROS 2 node.
+
+### Step 1: Create a Package
+
+First, make sure you have a ROS 2 package. If you don't have one, you can create one with the following command:
+
+```bash
+ros2 pkg create --build-type ament_python my_robot_launch
+```
+
+### Step 2: Create the Launch File
+
+Inside your package, create a new directory called `launch`. In this directory, create a Python file named `my_first_launch.py`:
+
+```python
+from launch import LaunchDescription
+from launch_ros.actions import Node
+
+def generate_launch_description():
+    return LaunchDescription([
+        Node(
+            package='turtlesim',
+            executable='turtlesim_node',
+            name='my_turtlesim'
+        ),
+    ])
+```
+
+This launch file imports the necessary modules and defines a `generate_launch_description` function. This function returns a `LaunchDescription` object, which contains a list of actions to be executed. In this case, we have a single `Node` action that starts the `turtlesim_node` from the `turtlesim` package.
+
+### Step 3: Build and Run the Launch File
+
+To run the launch file, you need to build your package and then use the `ros2 launch` command:
+
+```bash
+colcon build --packages-select my_robot_launch
+source install/setup.bash
+ros2 launch my_robot_launch my_first_launch.py
+```
+
+You should see the turtlesim window appear.
+
+## 3. Launching Multiple Nodes
+
+The real power of launch files comes from their ability to launch multiple nodes. Let's create a launch file that starts both the `turtlesim_node` and the `turtle_teleop_key` node.
+
+Create a new launch file named `turtlesim_app_launch.py`:
+
+```python
+from launch import LaunchDescription
+from launch_ros.actions import Node
+
+def generate_launch_description():
+    return LaunchDescription([
+        Node(
+            package='turtlesim',
+            executable='turtlesim_node',
+            name='turtlesim_node'
+        ),
+        Node(
+            package='turtlesim',
+            executable='turtle_teleop_key',
+            name='turtle_teleop_key'
+        ),
+    ])
+```
+
+Now, when you run this launch file, both nodes will be started, and you can control the turtle with your keyboard.
+
+## 4. Using Arguments and Parameters
+
+Launch files can also be used to pass arguments and set parameters for your nodes.
+
+### Launch Arguments
+
+Launch arguments are variables that you can pass to a launch file from the command line. This is useful for making your launch files more flexible.
+
+Here's an example of how to use a launch argument to set the name of the turtlesim node:
+
+```python
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
+
+def generate_launch_description():
+    turtle_name_arg = DeclareLaunchArgument(
+        'turtle_name',
+        default_value='my_turtle',
+        description='Name of the turtle'
+    )
+
+    return LaunchDescription([
+        turtle_name_arg,
+        Node(
+            package='turtlesim',
+            executable='turtlesim_node',
+            name=LaunchConfiguration('turtle_name')
+        ),
+    ])
+```
+
+You can then run this launch file with a custom turtle name:
+
+```bash
+ros2 launch my_robot_launch my_configurable_launch.py turtle_name:=shelly
+```
+
+### Node Parameters
+
+Node parameters are used to configure the behavior of a node. You can set parameters in a launch file using the `parameters` argument of the `Node` action.
+
+```python
+from launch import LaunchDescription
+from launch_ros.actions import Node
+
+def generate_launch_description():
+    return LaunchDescription([
+        Node(
+            package='turtlesim',
+            executable='turtlesim_node',
+            name='my_turtlesim',
+            parameters=[
+                {'background_r': 255},
+                {'background_g': 0},
+                {'background_b': 0},
+            ]
+        ),
+    ])
+```
+
+This launch file will start the turtlesim node with a red background.
+
+## 5. Advanced Launch File Concepts
+
+### Remapping Topics
+
+You can remap topic names in a launch file to connect nodes in different ways.
+
+```python
+from launch import LaunchDescription
+from launch_ros.actions import Node
+
+def generate_launch_description():
+    return LaunchDescription([
+        Node(
+            package='turtlesim',
+            executable='turtlesim_node',
+            name='turtlesim1'
+        ),
+        Node(
+            package='turtlesim',
+            executable='turtlesim_node',
+            name='turtlesim2'
+        ),
+        Node(
+            package='turtlesim',
+            executable='turtle_teleop_key',
+            name='teleop',
+            remappings=[
+                ('/turtle1/cmd_vel', '/turtlesim2/cmd_vel')
+            ]
+        ),
+    ])
+```
+
+In this example, the `turtle_teleop_key` node's commands are remapped to control the second turtlesim node.
+
+### Including Other Launch Files
+
+You can include other launch files within your launch file to create modular and reusable launch configurations.
+
+```python
+from launch import LaunchDescription
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from ament_index_python.packages import get_package_share_directory
+import os
+
+def generate_launch_description():
+    my_package_dir = get_package_share_directory('my_robot_launch')
+
+    return LaunchDescription([
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(my_package_dir, 'my_first_launch.py')
+            )
+        )
+    ])
+```
+
+This allows you to build complex launch systems from smaller, more manageable pieces.
+
+## Conclusion
+
+ROS 2 launch files are an essential tool for managing complex robotics applications. They allow you to start, configure, and connect multiple nodes in a structured and reproducible way. By mastering launch files, you can significantly improve your ROS 2 development workflow.

@@ -1,0 +1,209 @@
+---
+id: 05-urdf-modeling
+title: "URDF Modeling for Humanoid Robots"
+sidebar_label: "URDF Modeling"
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import Mermaid from '@theme/Mermaid';
+
+## 1. Introduction to URDF
+
+The Unified Robot Description Format (URDF) is an XML format used in ROS to describe all elements of a robot. This includes the robot's links, joints, sensors, and their physical properties. A well-defined URDF is crucial for simulation, visualization, and control of your robot.
+
+For a humanoid robot, the URDF will be a complex tree of links and joints, representing everything from the torso and limbs to individual finger segments.
+
+### Key URDF Elements
+
+- **`<robot>`**: The root element of the URDF file.
+- **`<link>`**: Describes a rigid body part of the robot. It has properties like `inertial`, `visual`, and `collision`.
+- **`<joint>`**: Connects two links together. It defines the relationship between the links, including the joint type (`revolute`, `continuous`, `prismatic`, `fixed`), axis of rotation, and limits.
+- **`<visual>`**: Defines the visual representation of a link (e.g., a 3D mesh).
+- **`<collision>`**: Defines the collision geometry of a link, used for physics simulation.
+- **`<inertial>`**: Defines the inertial properties of a link (mass, moment of inertia).
+
+## 2. Creating a Simple Humanoid URDF
+
+Let's start by creating a very simple URDF for a humanoid robot, consisting of a torso and a head.
+
+### The Torso Link
+
+The torso will be the root link of our robot.
+
+```xml
+<link name="torso">
+  <visual>
+    <geometry>
+      <box size="0.4 0.6 0.2" />
+    </geometry>
+    <material name="blue">
+      <color rgba="0.0 0.0 1.0 1.0" />
+    </material>
+  </visual>
+  <collision>
+    <geometry>
+      <box size="0.4 0.6 0.2" />
+    </geometry>
+  </collision>
+  <inertial>
+    <mass value="10" />
+    <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0" />
+  </inertial>
+</link>
+```
+
+### The Head Link and Neck Joint
+
+Now, let's add a head link and a neck joint to connect it to the torso.
+
+```xml
+<link name="head">
+  <visual>
+    <geometry>
+      <sphere radius="0.15" />
+    </geometry>
+    <material name="white">
+      <color rgba="1.0 1.0 1.0 1.0" />
+    </material>
+  </visual>
+  <collision>
+    <geometry>
+      <sphere radius="0.15" />
+    </geometry>
+  </collision>
+  <inertial>
+    <mass value="2" />
+    <inertia ixx="0.1" ixy="0.0" ixz="0.0" iyy="0.1" iyz="0.0" izz="0.1" />
+  </inertial>
+</link>
+
+<joint name="neck" type="revolute">
+  <parent link="torso" />
+  <child link="head" />
+  <origin xyz="0.0 0.0 0.15" rpy="0.0 0.0 0.0" />
+  <axis xyz="0 0 1" />
+  <limit lower="-1.57" upper="1.57" effort="10" velocity="1.0" />
+</joint>
+```
+
+This defines a revolute joint (a rotating joint) that allows the head to turn.
+
+### Visualizing the URDF
+
+You can visualize your URDF using RViz, a 3D visualization tool for ROS. You'll need a launch file to display the robot model.
+
+```python
+from launch import LaunchDescription
+from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
+from launch.substitutions import Command
+import os
+from ament_index_python.packages import get_package_share_directory
+
+def generate_launch_description():
+    urdf_path = os.path.join(
+        get_package_share_directory('my_robot_description'),
+        'urdf',
+        'my_humanoid.urdf'
+    )
+
+    robot_description = ParameterValue(
+        Command(['xacro ', urdf_path]),
+        value_type=str
+    )
+
+    return LaunchDescription([
+        Node(
+            package='robot_state_publisher',
+            executable='robot_state_publisher',
+            parameters=[{'robot_description': robot_description}]
+        ),
+        Node(
+            package='rviz2',
+            executable='rviz2',
+            name='rviz2',
+            output='screen',
+        ),
+    ])
+```
+
+## 3. Using Xacro for Cleaner URDFs
+
+As your humanoid robot becomes more complex, the URDF file can become very large and difficult to manage. Xacro (XML Macros) is a macro language for URDF that allows you to create more modular and readable robot descriptions.
+
+With Xacro, you can:
+- Define constants and properties.
+- Create macros for reusable components (e.g., an arm, a leg).
+- Include other Xacro files.
+
+### Example: A Reusable Arm Macro
+
+Here's an example of a Xacro macro for a simple robot arm:
+
+```xml
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="robot_arm" params="prefix parent *origin">
+
+    <link name="${prefix}_upper_arm">
+      ...
+    </link>
+
+    <joint name="${prefix}_shoulder" type="revolute">
+      <parent link="${parent}" />
+      <child link="${prefix}_upper_arm" />
+      <xacro:insert_block name="origin" />
+    </joint>
+
+    ...
+
+  </xacro:macro>
+
+</robot>
+```
+
+You can then instantiate this macro for the left and right arms:
+
+```xml
+<xacro:robot_arm prefix="left" parent="torso">
+  <origin xyz="0.0 0.3 0.0" rpy="0.0 0.0 0.0" />
+</xacro:robot_arm>
+
+<xacro:robot_arm prefix="right" parent="torso">
+  <origin xyz="0.0 -0.3 0.0" rpy="0.0 0.0 0.0" />
+</xacro:robot_arm>
+```
+
+## 4. Modeling a Full Humanoid
+
+A full humanoid URDF will have many links and joints, organized in a tree structure.
+
+<Mermaid chart={`
+graph TD
+    base_link --> torso;
+    torso --> head;
+    torso --> left_shoulder;
+    torso --> right_shoulder;
+    left_shoulder --> left_upper_arm;
+    right_shoulder --> right_upper_arm;
+    left_upper_arm --> left_lower_arm;
+    right_upper_arm --> right_lower_arm;
+    torso --> left_hip;
+    torso --> right_hip;
+    left_hip --> left_upper_leg;
+    right_hip --> right_upper_leg;
+    left_upper_leg --> left_lower_leg;
+    right_upper_leg --> right_lower_leg;
+`} />
+
+### Tips for Humanoid URDFs
+
+- **Start with a simple model and add complexity gradually.**
+- **Use Xacro to keep your URDF organized.**
+- **Pay close attention to joint limits and axes of rotation.**
+- **Use realistic inertial properties for better simulation.**
+- **Use high-quality 3D meshes for visualization.**
+
+## Conclusion
+
+URDF is the foundation for working with robot models in ROS 2. For a complex robot like a humanoid, a well-structured and accurate URDF is essential for everything from simulation to real-world control. By using Xacro and following a modular approach, you can create a detailed and maintainable description of your humanoid robot.

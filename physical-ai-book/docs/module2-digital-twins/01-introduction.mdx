@@ -1,0 +1,66 @@
+---
+id: 01-introduction
+title: "Introduction to Digital Twins"
+sidebar_label: "Introduction"
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import Mermaid from '@theme/Mermaid';
+
+## 1. What is a Digital Twin?
+
+A digital twin is a virtual model of a physical object, system, or process. It's not just a static 3D model; a true digital twin is a dynamic, living representation that is updated with real-world data and can be used to simulate, predict, and optimize the behavior of its physical counterpart.
+
+In the context of humanoid robotics, a digital twin is a high-fidelity simulation of the robot and its environment. This simulation is so accurate that it can be used to develop and test the robot's software before deploying it on the physical hardware.
+
+### Key Characteristics of a Digital Twin
+
+- **Fidelity**: The digital twin should accurately model the physical robot's kinematics, dynamics, sensors, and actuators.
+- **Real-time Data Integration**: The digital twin can be updated with data from the real robot, allowing for a direct comparison between simulation and reality.
+- **Environment Simulation**: The digital twin includes a model of the environment in which the robot operates, including physics, lighting, and other objects.
+- **Closed-Loop Simulation**: The robot's control software can be run in the simulation, and the simulated sensors provide feedback to the control software, creating a closed-loop system.
+
+<Mermaid chart={`
+graph TD
+    A[Physical Robot] -- Sensor Data --> B(Digital Twin);
+    B -- Simulation --> C{Analysis & Optimization};
+    C -- Control Commands --> A;
+`} />
+
+## 2. Why Use Digital Twins in Robotics?
+
+Developing software for humanoid robots is a complex and challenging task. Digital twins provide a powerful set of tools that can significantly accelerate the development process and improve the quality of the final product.
+
+### Benefits of Using Digital Twins
+
+- **Faster Development**: You can develop and test your robot's software in simulation much faster than you can on the physical hardware.
+- **Reduced Costs**: Simulation reduces the risk of damaging expensive hardware during development.
+- **Safer Testing**: You can test dangerous or extreme scenarios in simulation without any risk to the robot or its environment.
+- **Scalable Testing**: You can run thousands of tests in parallel in the cloud, allowing for comprehensive testing of your robot's software.
+- **Synthetic Data Generation**: You can use the simulation to generate large amounts of synthetic data for training machine learning models.
+
+## 3. Tools for Creating Digital Twins
+
+There are several powerful simulation tools available for creating digital twins of humanoid robots. In this module, we will focus on two of the most popular and powerful tools: Gazebo and Unity.
+
+### Gazebo
+
+Gazebo is a powerful and widely used robotics simulator that is tightly integrated with ROS. It provides a robust physics engine, a wide range of sensor models, and a large library of robot and environment models.
+
+**Key Features of Gazebo:**
+-   **Physics Engine**: Gazebo uses the ODE (Open Dynamics Engine) physics engine to simulate the robot's dynamics.
+-   **Sensor Models**: Gazebo provides a wide range of sensor models, including cameras, LiDAR, IMUs, and more.
+-   **ROS Integration**: Gazebo is tightly integrated with ROS, making it easy to connect your ROS 2 nodes to the simulation.
+
+### Unity
+
+Unity is a popular game engine that is increasingly being used for robotics simulation. It provides a high-fidelity rendering engine, a powerful physics engine, and a flexible C# scripting interface.
+
+**Key Features of Unity:**
+-   **High-Fidelity Rendering**: Unity's rendering engine can create photorealistic environments, which is crucial for training vision-based machine learning models.
+-   **Physics Engine**: Unity uses the NVIDIA PhysX physics engine, which provides a high-performance and accurate simulation of the robot's dynamics.
+-   **C# Scripting**: Unity's C# scripting interface allows you to create complex and dynamic simulations.
+
+## Conclusion
+
+Digital twins are an essential tool for modern robotics development. They provide a safe, fast, and cost-effective way to develop and test your robot's software. In the following chapters, we will dive deeper into Gazebo and Unity, and learn how to create a high-fidelity digital twin of a humanoid robot.

@@ -1,0 +1,228 @@
+---
+title: "Pub/Sub with rclpy"
+sidebar_position: 3
+---
+
+import Mermaid from '@theme/Mermaid';
+
+# 1.3 Hands-On: Publisher/Subscriber Communication with `rclpy`
+
+Now that we understand the core concepts, it's time to write our first ROS 2 nodes. We'll use `rclpy`, the official Python client library for ROS 2, to create a simple publisher and subscriber. This is the "Hello World" of ROS.
+
+## Prerequisites
+
+-   A working ROS 2 installation (e.g., Humble Hawksbill).
+-   A text editor (e.g., VS Code).
+-   Your ROS 2 environment sourced. Remember to run `source /opt/ros/humble/setup.bash` in every new terminal.
+
+## The Goal
+
+We will create two nodes:
+1.  A **Publisher Node** (`talker`) that continuously broadcasts a string message with a counter.
+2.  A **Subscriber Node** (`listener`) that listens for these messages and prints them to the console.
+
+<Mermaid chart={`
+graph TD
+    A[Node: talker] -- Publishes --> B((Topic: /chatter));
+    B -- Message: "Hello World: 1" --> C[Node: listener];
+    B -- Message: "Hello World: 2" --> C;
+    B -- "..." --> C;
+    style B fill:#87CEEB
+`} />
+
+---
+
+## Step 1: Create a ROS 2 Package
+
+First, we need a package to house our code. A package is a directory with a specific structure and a `package.xml` file that contains metadata about the package.
+
+```bash
+# Navigate to the src directory of your ROS 2 workspace
+cd ~/ros2_ws/src
+
+# Create a new package named 'my_py_pkg' with a dependency on 'rclpy'
+ros2 pkg create --build-type ament_python my_py_pkg --dependencies rclpy
+```
+
+This command creates a `my_py_pkg` directory with the following structure:
+
+```
+my_py_pkg/
+├── my_py_pkg/
+│   └── __init__.py
+├── resource/
+│   └── my_py_pkg
+├── test/
+│   ├── test_copyright.py
+│   └── test_flake8.py
+│   └── test_pep257.py
+├── package.xml
+└── setup.py
+└── setup.cfg
+```
+
+---
+
+## Step 2: Write the Publisher Node (`talker.py`)
+
+Inside the `my_py_pkg/my_py_pkg/` directory, create a new file named `talker.py`.
+
+```python
+# my_py_pkg/my_py_pkg/talker.py
+
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import String
+
+class MinimalPublisher(Node):
+
+    def __init__(self):
+        super().__init__('minimal_publisher')
+        self.publisher_ = self.create_publisher(String, 'chatter', 10)
+        timer_period = 0.5  # seconds
+        self.timer = self.create_timer(timer_period, self.timer_callback)
+        self.i = 0
+
+    def timer_callback(self):
+        msg = String()
+        msg.data = 'Hello World: %d' % self.i
+        self.publisher_.publish(msg)
+        self.get_logger().info('Publishing: "%s"' % msg.data)
+        self.i += 1
+
+def main(args=None):
+    rclpy.init(args=args)
+    minimal_publisher = MinimalPublisher()
+    rclpy.spin(minimal_publisher)
+    minimal_publisher.destroy_node()
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
+```
+
+### Code Breakdown:
+
+1.  **`import`**: We import `rclpy`, `Node`, and the `String` message type from `std_msgs.msg`.
+2.  **`MinimalPublisher` Class**: We create a class that inherits from `Node`.
+3.  **`__init__`**:
+    -   `super().__init__('minimal_publisher')`: We initialize the parent `Node` class with the name of our node.
+    -   `self.create_publisher(String, 'chatter', 10)`: This is the core of the publisher. We tell the node we want to publish messages of type `String` on the topic named `chatter`. The `10` is the queue size—a quality of service (QoS) setting that limits the amount of queued messages if a subscriber is not receiving them fast enough.
+    -   `self.create_timer(...)`: We create a timer that will call `timer_callback` every `0.5` seconds.
+4.  **`timer_callback`**:
+    -   This function is executed every time the timer fires.
+    -   `msg = String()`: We create an instance of the `String` message.
+    -   `msg.data = ...`: We populate the message's `data` field.
+    -   `self.publisher_.publish(msg)`: We publish the message to the `chatter` topic.
+    -   `self.get_logger().info(...)`: We print a log message to the console.
+5.  **`main` function**:
+    -   `rclpy.init()`: Initializes the `rclpy` library.
+    -   `minimal_publisher = MinimalPublisher()`: Creates an instance of our node.
+    -   `rclpy.spin(minimal_publisher)`: This is the main event loop. It keeps the node running and allows it to process callbacks (like our timer callback). The program will stay in this function until you press `Ctrl+C`.
+    -   `destroy_node()` and `shutdown()`: Clean up resources when the program exits.
+
+---
+
+## Step 3: Write the Subscriber Node (`listener.py`)
+
+Now, create a file named `listener.py` in the same directory.
+
+```python
+# my_py_pkg/my_py_pkg/listener.py
+
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import String
+
+class MinimalSubscriber(Node):
+
+    def __init__(self):
+        super().__init__('minimal_subscriber')
+        self.subscription = self.create_subscription(
+            String,
+            'chatter',
+            self.listener_callback,
+            10)
+        self.subscription  # prevent unused variable warning
+
+    def listener_callback(self, msg):
+        self.get_logger().info('I heard: "%s"' % msg.data)
+
+def main(args=None):
+    rclpy.init(args=args)
+    minimal_subscriber = MinimalSubscriber()
+    rclpy.spin(minimal_subscriber)
+    minimal_subscriber.destroy_node()
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
+```
+
+### Code Breakdown:
+
+1.  **`__init__`**:
+    -   `self.create_subscription(String, 'chatter', self.listener_callback, 10)`: This is the core of the subscriber. We subscribe to the `chatter` topic, expecting messages of type `String`. Every time a message is received, the function `self.listener_callback` will be executed. The queue size of `10` is a QoS setting.
+2.  **`listener_callback`**:
+    -   This function is the entry point for incoming messages.
+    -   It receives one argument: `msg`, which is the `String` message instance received from the topic.
+    -   `self.get_logger().info(...)`: We simply log the content of the message's `data` field to the console.
+
+---
+
+## Step 4: Add Entry Points to `setup.py`
+
+To make our nodes executable with `ros2 run`, we need to tell ROS 2 about them in the `setup.py` file.
+
+Open `my_py_pkg/setup.py` and add the `entry_points` argument to the `setup` function:
+
+```python
+# ... inside setup.py
+setup(
+    # ... other arguments
+    entry_points={
+        'console_scripts': [
+            'talker = my_py_pkg.talker:main',
+            'listener = my_py_pkg.listener:main',
+        ],
+    },
+)
+```
+
+This tells `ros2` that the executable `talker` is created by running the `main` function from `my_py_pkg.talker`, and similarly for `listener`.
+
+---
+
+## Step 5: Build and Run
+
+1.  **Build the package**:
+    Navigate to the root of your workspace (`~/ros2_ws`) and run:
+    ```bash
+    colcon build --packages-select my_py_pkg
+    ```
+
+2.  **Source the workspace**:
+    In each new terminal you open, you must source your workspace's setup file to make your new executables available.
+    ```bash
+    source ~/ros2_ws/install/setup.bash
+    ```
+
+3.  **Run the nodes**:
+    -   In one terminal, run the talker:
+        ```bash
+        ros2 run my_py_pkg talker
+        # Output:
+        # [INFO] [minimal_publisher]: Publishing: "Hello World: 0"
+        # [INFO] [minimal_publisher]: Publishing: "Hello World: 1"
+        # ...
+        ```
+    -   In a second terminal (remember to source!), run the listener:
+        ```bash
+        ros2 run my_py_pkg listener
+        # Output:
+        # [INFO] [minimal_subscriber]: I heard: "Hello World: 0"
+        # [INFO] [minimal_subscriber]: I heard: "Hello World: 1"
+        # ...
+        ```
+
+You have successfully created a publisher and a subscriber! They are communicating anonymously over the `/chatter` topic. You can use ROS 2 command-line tools like `ros2 topic list` and `ros2 node list` to inspect what's happening under the hood. We'll cover those tools in a later section.

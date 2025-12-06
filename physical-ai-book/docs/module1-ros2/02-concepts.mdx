@@ -1,0 +1,136 @@
+---
+title: "ROS 2 Concepts"
+sidebar_position: 2
+---
+
+import Mermaid from '@theme/Mermaid';
+
+# 1.2 Core ROS 2 Concepts
+
+To understand how a ROS 2-based robot operates, you must first grasp its fundamental building blocks. These concepts define how different parts of the software communicate and work together. The primary concepts are Nodes, Topics, Messages, Services, and Actions.
+
+## The ROS 2 Graph
+
+The entire network of ROS 2 components is called the **ROS 2 Graph**. It's a conceptual map of all the nodes and the communication pathways between them.
+
+<Mermaid chart={`
+graph TD
+    subgraph ROS 2 Graph
+        A[Node 1: /camera_driver] -- Publishes --> B((Topic: /image_raw));
+        B -- Message: Image --> C[Node 2: /image_processor];
+        C -- Publishes --> D((Topic: /detected_objects));
+        D -- Message: Detections --> E[Node 3: /object_tracker];
+        F[Node 4: /user_interface] -- Service Call --> G{Service: /get_robot_status};
+        H[Node 5: /robot_state] -- Service Response --> F;
+        I[Node 6: /mission_planner] -- Action Goal --> J[(Action: /navigate_to_pose)];
+        K[Node 7: /navigation_server] -- Action Feedback/Result --> I;
+    end
+    style B fill:#87CEEB
+    style D fill:#87CEEB
+    style G fill:#90EE90
+    style J fill:#FFA07A
+`} />
+
+---
+
+## 1. Nodes: The Building Blocks
+
+A **Node** is the smallest unit of executable code in ROS 2. Each node should be responsible for a single, specific purpose.
+
+-   **Example**: A node to control the camera, a node to process images, a node to plan paths, a node for motor control.
+
+Breaking a system into modular nodes offers several advantages:
+-   **Fault Tolerance**: If one node crashes, the rest of the system can continue to run.
+-   **Reusability**: A well-designed node (e.g., a camera driver) can be reused across many different robots.
+-   **Clarity**: It's easier to understand and debug a system made of small, single-purpose components.
+-   **Language Independence**: One node can be written in Python, another in C++, and they can communicate seamlessly.
+
+A single executable can contain one or more nodes. In a complex system like a humanoid robot, you might have dozens of nodes running concurrently.
+
+---
+
+## 2. Communication Types
+
+Nodes communicate with each other using three primary mechanisms: Topics, Services, and Actions. Choosing the right mechanism is key to building an efficient and reliable system.
+
+### Topics: The Continuous Data Stream
+
+-   **Analogy**: A radio broadcast or a public announcement channel.
+-   **Pattern**: Publisher-Subscriber (Pub/Sub).
+-   **Use Case**: For continuous, one-way streams of data where it doesn't matter if a message is missed occasionally.
+
+One or more nodes **publish** (broadcast) data to a named channel called a **Topic**. Any number of other nodes can **subscribe** to that topic to receive the data. The publisher doesn't know or care who is listening.
+
+-   **Message**: The data itself, structured in a predefined format.
+-   **Examples**:
+    -   A camera node continuously publishing `/image_raw` with `sensor_msgs/Image` messages.
+    -   An IMU node continuously publishing `/imu/data` with `sensor_msgs/Imu` messages.
+    -   A motor control node publishing the current joint states to `/joint_states`.
+
+<Mermaid chart={`
+graph TD
+    A[Publisher Node] -- Publishes Message --> B((Topic));
+    B -- Message --> C[Subscriber Node 1];
+    B -- Message --> D[Subscriber Node 2];
+    B -- Message --> E[...];
+`} />
+
+### Services: The Remote Procedure Call (RPC)
+
+-   **Analogy**: A function call or a question-and-answer exchange.
+-   **Pattern**: Client-Server.
+-   **Use Case**: For synchronous, request/response interactions where you need a direct confirmation that an operation was completed.
+
+A **Client** node sends a `Request` to a **Server** node and waits for a `Response`. The connection is one-to-one and blocks until the response is received (or a timeout occurs).
+
+-   **Examples**:
+    -   A node calling a `/get_robot_status` service and receiving back the battery level and temperature.
+    -   A node requesting to `/spawn_object` in a simulation and getting a success/failure boolean in return.
+    -   A service `/set_led_color` that changes an LED and confirms the change.
+
+<Mermaid chart={`
+sequenceDiagram
+    participant Client
+    participant Server
+    Client->>Server: Request
+    activate Server
+    Server-->>Client: Response
+    deactivate Server
+`} />
+
+### Actions: The Long-Running Task Manager
+
+-   **Analogy**: Ordering a pizza. You place an order (goal), get updates (feedback, e.g., "baking," "out for delivery"), and finally get the result (the pizza). You can also cancel the order.
+-   **Pattern**: Client-Server with feedback and preemption.
+-   **Use Case**: For long-running, asynchronous tasks that may take a significant amount of time to complete and for which you need progress updates and the ability to cancel.
+
+An **Action Client** sends a `Goal` to an **Action Server**. The server acknowledges the goal and starts executing the task. While executing, it provides periodic `Feedback`. When the task is finished, it sends a final `Result`. The client can request to `cancel` the goal at any point.
+
+-   **Examples**:
+    -   Sending a `/navigate_to_pose` goal to the navigation system. Feedback could be the robot's current distance from the goal. The result would be success or failure.
+    -   An action `/pick_object` for a manipulator arm. Feedback might include "moving to pre-grasp," "grasping," "lifting."
+    -   An action `/rotate_degrees` to turn the robot's base by a specific amount.
+
+<Mermaid chart={`
+sequenceDiagram
+    participant Client
+    participant Server
+    Client->>Server: Send Goal
+    Server-->>Client: Acknowledge
+    loop Feedback Loop
+        Server-->>Client: Feedback (e.g., current progress)
+    end
+    Server-->>Client: Result (when complete)
+`} />
+
+---
+
+## Summary of Communication Types
+
+| Type      | Pattern            | Use For                                                   | Key Features                                       |
+| --------- | ------------------ | --------------------------------------------------------- | -------------------------------------------------- |
+| **Topic** | Publisher/Subscriber | Continuous data streams (e.g., sensor data, robot state)  | Many-to-many, asynchronous, "fire and forget"      |
+| **Service** | Client/Server      | Quick, transactional requests (e.g., get/set parameters) | One-to-one, synchronous (blocking), request/response |
+| **Action**  | Client/Server      | Long-running, preemptible tasks (e.g., navigation, manipulation) | One-to-one, asynchronous, provides feedback, cancelable |
+
+Understanding these core concepts is the first and most crucial step in mastering ROS 2. In the following sections, we'll see how to put them into practice.

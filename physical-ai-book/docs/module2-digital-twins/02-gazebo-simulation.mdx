@@ -1,0 +1,190 @@
+---
+id: 02-gazebo-simulation
+title: "Humanoid Simulation in Gazebo"
+sidebar_label: "Gazebo Simulation"
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import Mermaid from '@theme/Mermaid';
+
+## 1. Introduction to Gazebo
+
+Gazebo is a powerful 3D robotics simulator that is widely used in the robotics community. It is a mature and feature-rich simulator that is tightly integrated with ROS. Gazebo allows you to simulate your robot in a realistic environment, with accurate physics, sensors, and actuators.
+
+In this chapter, we will learn how to create a simple Gazebo simulation for a humanoid robot.
+
+### Key Features of Gazebo for Humanoid Simulation
+
+- **Physics Engine**: Gazebo uses the Open Dynamics Engine (ODE) to simulate the physics of the robot and its environment. This includes gravity, friction, and collisions.
+- **Sensor Models**: Gazebo provides a wide range of sensor models, including cameras, LiDAR, IMUs, and force-torque sensors.
+- **ROS Integration**: Gazebo is tightly integrated with ROS, allowing you to control your robot and read sensor data from your ROS 2 nodes.
+- **World Files**: Gazebo uses SDF (Simulation Description Format) files to describe the robot and its environment.
+
+### Gazebo Physics Interaction Loop
+
+<Mermaid chart={`
+graph TD
+    A[World Update Event] --> B{Physics Engine (ODE)};
+    B -- Updates --> C[Model States (Pose, Velocity)];
+    C --> D{Sensor Plugins};
+    D -- Generate Data --> E[ROS 2 Topics];
+    C --> F{Control Plugins};
+    F -- Apply Forces/Torques --> B;
+    G[ROS 2 Commands] --> F;
+`} />
+
+
+## 2. Setting Up a Gazebo Simulation
+
+To create a Gazebo simulation, you need to create a "world" file that defines the environment and the robot.
+
+### Step 1: Create a World File
+
+Create a new file named `my_humanoid_world.sdf`:
+
+```xml
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="default">
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <!-- A ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+    <!-- Your humanoid robot -->
+    <include>
+      <uri>model://my_humanoid</uri>
+      <name>my_humanoid</name>
+      <pose>0 0 1.0 0 0 0</pose>
+    </include>
+  </world>
+</sdf>
+```
+
+This world file includes a sun, a ground plane, and our humanoid robot. The robot is loaded from a model file, which we will create next.
+
+### Step 2: Create a Robot Model
+
+Create a new directory named `my_humanoid` and a file named `model.sdf` inside it:
+
+```xml
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="my_humanoid">
+    <link name="torso">
+      <inertial>
+        <mass>10</mass>
+        <inertia>
+          <ixx>1.0</ixx>
+          <ixy>0.0</ixy>
+          <ixz>0.0</ixz>
+          <iyy>1.0</iyy>
+          <iyz>0.0</iyz>
+          <izz>1.0</izz>
+        </inertia>
+      </inertial>
+      <visual name="visual">
+        <geometry>
+          <box>
+            <size>0.4 0.6 0.2</size>
+          </box>
+        </geometry>
+      </visual>
+      <collision name="collision">
+        <geometry>
+          <box>
+            <size>0.4 0.6 0.2</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>
+```
+
+This is a simple model of a humanoid torso. A complete humanoid model would have many more links and joints.
+
+### Step 3: Launching the Simulation
+
+You can launch the simulation using the `gazebo` command:
+
+```bash
+gazebo my_humanoid_world.sdf
+```
+
+This will open the Gazebo GUI and you should see your humanoid robot standing on the ground plane.
+
+## 3. Interacting with the Simulation
+
+Gazebo provides several ways to interact with the simulation.
+
+### Gazebo GUI
+
+The Gazebo GUI allows you to:
+-   **Manipulate the view**: Pan, rotate, and zoom the camera.
+-   **Apply forces**: Apply forces and torques to the robot to test its stability.
+-   **Inspect models**: View the properties of the robot and its links.
+-   **Add models**: Add new models to the simulation from the Gazebo model database.
+
+### Gazebo Plugins
+
+Gazebo plugins are a powerful way to extend the functionality of Gazebo. You can use plugins to:
+-   **Control the robot**: Create a plugin that subscribes to ROS 2 topics and controls the robot's joints.
+-   **Simulate sensors**: Create a plugin that simulates a custom sensor.
+-   **Add custom logic**: Create a plugin that adds custom logic to the simulation.
+
+Here's an example of a simple plugin that applies a force to the robot:
+
+```cpp
+#include <gazebo/gazebo.hh>
+#include <gazebo/physics/physics.hh>
+
+namespace gazebo
+{
+  class MyPlugin : public WorldPlugin
+  {
+    public: void Load(physics::WorldPtr _world, sdf::ElementPtr _sdf)
+    {
+      this->world = _world;
+      this->updateConnection = event::Events::ConnectWorldUpdateBegin(
+          std::bind(&MyPlugin::OnUpdate, this));
+    }
+
+    public: void OnUpdate()
+    {
+      this->world->ModelByName("my_humanoid")->GetLink("torso")->SetLinearVel(ignition::math::Vector3d(0.1, 0, 0));
+    }
+
+    private: physics::WorldPtr world;
+    private: event::ConnectionPtr updateConnection;
+  };
+
+  GZ_REGISTER_WORLD_PLUGIN(MyPlugin)
+}
+```
+
+## 4. Gazebo and ROS 2 Integration
+
+The `gazebo_ros` package provides a set of plugins that allow you to integrate Gazebo with ROS 2. These plugins allow you to:
+-   **Control the robot**: Control the robot's joints using ROS 2 topics.
+-   **Read sensor data**: Read sensor data from Gazebo and publish it to ROS 2 topics.
+-   **Spawn models**: Spawn and delete models in the simulation using ROS 2 services.
+
+To use the `gazebo_ros` plugins, you need to add them to your robot's SDF file.
+
+```xml
+<plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+  <robot_param>robot_description</robot_param>
+  <robot_param_node>robot_state_publisher</robot_param_node>
+  <parameters>$(find my_robot_config)/config/my_controllers.yaml</parameters>
+</plugin>
+```
+
+This plugin loads the `ros2_control` framework, which allows you to control the robot's joints using a standard set of controllers.
+
+## Conclusion
+
+Gazebo is a powerful and flexible simulator that is an essential tool for robotics development. It allows you to create realistic simulations of your robot and its environment, and to test your robot's software in a safe and controlled manner. In the next chapter, we will dive deeper into the physics concepts that are essential for creating accurate and realistic simulations.

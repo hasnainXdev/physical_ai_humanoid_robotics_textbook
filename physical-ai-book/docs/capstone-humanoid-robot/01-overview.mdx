@@ -1,0 +1,52 @@
+# Capstone Project Overview: Autonomous Humanoid Robot
+
+## Introduction to the Capstone Project
+
+This capstone project culminates the knowledge and skills acquired throughout the textbook, challenging you to design, implement, and evaluate a fully autonomous humanoid robot system in a simulated environment. The goal is to integrate perception, localization, navigation, manipulation, and cognitive reasoning capabilities to enable a humanoid robot to perform complex, multi-step tasks based on natural language commands. This project emphasizes a holistic approach, bringing together ROS 2, NVIDIA Isaac Sim, advanced AI models, and VLA (Vision-Language-Action) principles to create an intelligent and capable robotic agent.
+
+## Project Goal
+
+The primary objective of this capstone project is to develop an autonomous humanoid robot that can understand high-level natural language instructions, plan its actions, navigate a simulated environment, perceive and interact with objects, and provide intelligent feedback. The project aims to demonstrate end-to-end intelligence, from human intent to physical execution.
+
+## Core Capabilities to Implement
+
+The autonomous humanoid robot system will be expected to demonstrate the following core capabilities:
+
+1.  **Voice Command Understanding:** The robot must accurately transcribe and interpret natural language voice commands from a human user.
+2.  **Cognitive Planning:** Leveraging LLMs, the robot should be able to decompose complex tasks into a sequence of executable sub-goals and actions.
+3.  **Visual Perception:** The robot needs to perceive its environment, detect and identify objects, and estimate their 3D poses using simulated cameras and potentially LiDAR.
+4.  **Simultaneous Localization and Mapping (SLAM):** The robot must localize itself within an unknown environment and simultaneously build a map of that environment.
+5.  **Autonomous Navigation (Nav2):** The robot should be able to plan collision-free paths, navigate to specified locations, and avoid dynamic obstacles.
+6.  **Object Manipulation:** The robot must be able to interact with objects, including grasping, moving, and placing them accurately.
+7.  **ROS 2 Integration:** All components of the VLA pipeline will be integrated using the ROS 2 framework for robust communication and control.
+8.  **Sim-to-Real Considerations:** While implemented in simulation, the architecture and algorithms should be designed with future real-world deployment in mind.
+
+## Simulated Environment: NVIDIA Isaac Sim
+
+NVIDIA Isaac Sim will serve as the primary simulation environment for this capstone project. Its photorealistic rendering, accurate physics engine, and ROS 2 integration capabilities provide an ideal platform for developing and testing complex humanoid robot behaviors. The simulated environment will include various objects, furniture, and dynamic elements to mimic real-world complexity.
+
+## Project Structure and Modules
+
+The capstone project will draw upon and integrate concepts from all previous modules of this textbook:
+
+*   **Module 1: ROS 2 Fundamentals:** Core ROS 2 concepts for inter-component communication.
+*   **Module 2: Digital Twins:** Principles of simulation, physics, and sensor modeling.
+*   **Module 3: NVIDIA Isaac Sim:** Setting up environments, robot models, and utilizing Isaac ROS components for perception and navigation.
+*   **Module 4: VLA Robotics:** Implementing voice commands, LLM-driven planning, and language-to-action mapping.
+
+## Task Breakdown and Milestones
+
+The capstone project will be broken down into several key implementation phases, each with specific tasks and deliverables:
+
+1.  **System Integration & Communication:** Establishing a robust ROS 2 framework for all components.
+2.  **Perception & Mapping:** Implementing object detection, pose estimation, and SLAM in Isaac Sim.
+3.  **Navigation & Motion Planning:** Configuring Nav2 for humanoid locomotion and obstacle avoidance.
+4.  **Manipulation:** Developing grasping and object placement capabilities.
+5.  **Voice & Cognitive Control:** Integrating Whisper for voice commands and an LLM for task planning.
+6.  **Full Task Execution:** Demonstrating the robot's ability to complete complex, multi-step tasks from natural language input.
+
+Each section of this module will detail a specific aspect of the capstone project, providing guidance and examples for its implementation.
+
+## Conclusion
+
+This capstone project offers an exciting opportunity to synthesize your understanding of physical AI and humanoid robotics into a functional, intelligent system. By successfully completing this project, you will gain invaluable experience in designing, integrating, and evaluating advanced robotic capabilities, preparing you for future endeavors in this rapidly evolving field.

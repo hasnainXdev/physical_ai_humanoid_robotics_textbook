@@ -1,0 +1,95 @@
+---
+id: 06-ai-pipelines
+title: "Connecting Sensor Outputs to AI Pipelines"
+sidebar_label: "AI Pipelines"
+---
+
+import Mermaid from '@theme/Mermaid';
+
+## 1. From Raw Data to Actionable Insights
+
+Having a digital twin that produces realistic sensor data is the first step. The next, and more critical, step is to process this stream of data and turn it into information that an AI agent can use to make decisions. This process is often called an **AI pipeline** or a **perception pipeline**.
+
+The pipeline is a series of nodes, each responsible for a specific processing task. The output of one node becomes the input of the next, creating a flow of information from raw sensor readings to high-level understanding.
+
+### A Typical AI Pipeline
+
+<Mermaid chart={`
+graph TD
+    subgraph Digital Twin (Gazebo/Unity)
+        A[Simulated Camera] -->|sensor_msgs/Image| B((/camera/image_raw));
+        C[Simulated LiDAR] -->|sensor_msgs/PointCloud2| D((/lidar/points));
+        E[Simulated IMU] -->|sensor_msgs/Imu| F((/imu/data));
+    end
+
+    subgraph ROS 2 Perception Pipeline
+        B --> G[Node: Object Detector];
+        G -->|vision_msgs/Detection3DArray| H((/objects/detected));
+        D --> I[Node: Obstacle Detector];
+        I -->|custom_msgs/ObstacleArray| J((/obstacles));
+        F --> K[Node: State Estimator];
+        K -->|nav_msgs/Odometry| L((/odometry/filtered));
+    end
+
+    subgraph AI Agent / Planner
+        H --> M{Decision Making};
+        J --> M;
+        L --> M;
+        M -->|geometry_msgs/Twist| N((/cmd_vel));
+    end
+
+    style B fill:#87CEEB
+    style D fill:#87CEEB
+    style F fill:#87CEEB
+    style H fill:#90EE90
+    style J fill:#90EE90
+    style L fill:#90EE90
+    style N fill:#FFA07A
+`} />
+
+In this example, raw data from simulated sensors (camera, LiDAR, IMU) is published to ROS 2 topics. A set of perception nodes subscribes to these topics, processes the data, and publishes higher-level information (detected objects, obstacles, robot pose). Finally, the AI agent uses this processed information to make a decision and send a command to the robot's controllers.
+
+---
+
+## 2. Example: An Object Detection Pipeline
+
+Let's walk through a concrete example: using a simulated camera to detect objects.
+
+### Step 1: The Simulator (Data Source)
+-   **Simulator**: Unity or Gazebo.
+-   **Sensor**: A simulated camera attached to the humanoid's head.
+-   **Action**: The simulator's ROS 2 plugin renders the scene from the camera's viewpoint and publishes the resulting image to the `/camera/image_raw` topic as a `sensor_msgs/Image` message. This happens at a regular rate, for example, 30 times per second (30 Hz).
+
+### Step 2: The AI Node (Processing)
+-   **Node**: An object detection node, likely written in Python using a deep learning framework like TensorFlow or PyTorch.
+-   **Subscription**: The node subscribes to the `/camera/image_raw` topic.
+-   **Core Logic**:
+    1.  **Callback**: Whenever a new image message is received, the node's callback function is triggered.
+    2.  **Conversion**: The ROS 2 `Image` message is converted into a format that the deep learning model can understand (e.g., a NumPy array or a PyTorch tensor). Libraries like `cv_bridge` are commonly used for this.
+    3.  **Inference**: The image is passed through a pre-trained object detection model (e.g., YOLO, SSD, Faster R-CNN).
+    4.  **Result**: The model outputs a list of detected objects, each with a class label (e.g., "cup," "book"), a confidence score, and a bounding box.
+
+### Step 3: The Output (Actionable Information)
+-   **Publication**: The object detection node publishes the results to a new topic, for example, `/objects/detected`.
+-   **Message Type**: The message type should be structured to hold the detection information. ROS 2 has a standard message type for this: `vision_msgs/Detection3DArray`, which can store the object's identity, position, and size.
+-   **Downstream Consumer**: The AI planner or a specific task-oriented node (e.g., a "grasping" node) can now subscribe to `/objects/detected`. It no longer needs to worry about the raw pixels; it can work directly with the high-level information: "There is a cup at position (x, y, z)."
+
+### Why This Decoupling is Powerful
+-   **Modularity**: The object detection node is a self-contained component. You can swap out the AI model (e.g., upgrade from YOLOv5 to YOLOv8) without changing any other part of the system.
+-   **Reusability**: You can use the same object detection node with a real camera by simply remapping the input topic. The node doesn't care if the image comes from a simulator or a physical device.
+-   **Efficiency**: Raw sensor data, especially from cameras and LiDAR, can have a very high bandwidth. By processing it close to the source and publishing only the high-level results, you reduce the overall data load on the ROS 2 network.
+
+---
+
+## 3. Integrating State Estimation
+
+While detecting external objects is crucial, the robot also needs to know its own state—its position, orientation, and velocity. This is the job of a **state estimator**.
+
+-   **Inputs**: The state estimator typically fuses data from multiple sensors, most commonly an **IMU** (for orientation and acceleration) and **wheel odometry** (for movement tracking, if the robot has wheels) or **leg kinematics** (for humanoids).
+-   **Algorithm**: It uses a filtering algorithm, like an **Extended Kalman Filter (EKF)** or an **Unscented Kalman Filter (UKF)**, to combine these noisy and incomplete sensor readings into a single, more accurate estimate of the robot's state.
+-   **Output**: The estimator publishes the robot's state to a topic like `/odometry/filtered` using the `nav_msgs/Odometry` message type.
+-   **Importance**: Nearly every other AI task, from navigation to manipulation, depends on having an accurate estimate of the robot's own pose. Your AI needs to know "Where am I?" before it can decide "What should I do?".
+
+## Conclusion
+
+Connecting sensor outputs to AI pipelines is the essence of building an intelligent robot. By using the ROS 2 publisher/subscriber model, you can create modular, decoupled pipelines that transform raw, high-bandwidth sensor data from your digital twin into the high-level, actionable insights needed by your AI agents. This architecture is fundamental to creating a robust and scalable robotics software system.

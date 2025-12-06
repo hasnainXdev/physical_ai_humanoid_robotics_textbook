@@ -1,0 +1,159 @@
+---
+id: 06-ai-integration
+title: "Integrating AI Agents with ROS 2 Controllers"
+sidebar_label: "AI Integration"
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import Mermaid from '@theme/Mermaid';
+
+## 1. Bridging the Gap Between AI and Robotics
+
+The integration of Artificial Intelligence (AI) with robotics is a rapidly growing field. AI agents, particularly those based on Large Language Models (LLMs) and other machine learning techniques, can provide high-level decision-making capabilities to robots. ROS 2, with its robust communication and control infrastructure, is the perfect platform for executing the actions decided by these AI agents.
+
+This chapter explores how to connect an AI agent to a ROS 2 system, allowing the AI to control the robot's behavior.
+
+### The AI-Robot Control Loop
+
+The basic control loop for an AI-driven robot can be broken down into the following steps:
+
+1.  **Perception**: The robot gathers information about its environment through sensors (cameras, LiDAR, etc.).
+2.  **AI Agent**: The AI agent processes the perception data, along with a high-level goal, to decide on the next action.
+3.  **ROS 2 Controller**: The AI agent sends a command to a ROS 2 controller.
+4.  **Execution**: The ROS 2 controller translates the command into low-level actions for the robot's actuators.
+
+<Mermaid chart={`
+graph TD
+    A[Sensors] --> B(Perception Data);
+    B --> C{AI Agent};
+    C --> D[Action Command];
+    D --> E(ROS 2 Controller);
+    E --> F[Actuator Commands];
+    F --> G(Robot);
+`} />
+
+## 2. Communication Between the AI Agent and ROS 2
+
+The AI agent and the ROS 2 system can be seen as two separate components that need to communicate effectively. There are several ways to achieve this, but a common approach is to use a ROS 2 action server.
+
+### Why Use an Action Server?
+
+An action server is ideal for this scenario because it's designed for long-running, goal-oriented tasks. The AI agent can send a goal to the action server (e.g., "pick up the red block"), and the action server will manage the execution of this task, providing feedback and a final result.
+
+### Example: A Simple "Greeter" AI Agent
+
+Let's create a simple example where an AI agent tells a robot to greet a person.
+
+#### Step 1: The Action Definition
+
+First, we need to define the action. Create a file named `Greet.action` in an `action` directory within your package:
+
+```
+# Greet.action
+string name
+---
+string greeting
+---
+string status
+```
+
+This defines a goal (the name of the person to greet), a result (the greeting message), and feedback (the current status of the greeting process).
+
+#### Step 2: The ROS 2 Action Server
+
+Now, let's create the ROS 2 action server that will receive the goal from the AI agent and execute the greeting.
+
+```python
+import rclpy
+from rclpy.action import ActionServer
+from rclpy.node import Node
+from my_robot_interfaces.action import Greet
+
+class GreeterActionServer(Node):
+
+    def __init__(self):
+        super().__init__('greeter_action_server')
+        self._action_server = ActionServer(
+            self,
+            Greet,
+            'greet',
+            self.execute_callback)
+
+    def execute_callback(self, goal_handle):
+        self.get_logger().info('Executing goal...')
+
+        feedback_msg = Greet.Feedback()
+        feedback_msg.status = 'Generating greeting...'
+        goal_handle.publish_feedback(feedback_msg)
+
+        # In a real application, you would have more complex logic here
+        greeting = f"Hello, {goal_handle.request.name}!"
+
+        goal_handle.succeed()
+
+        result = Greet.Result()
+        result.greeting = greeting
+        return result
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = GreeterActionServer()
+    rclpy.spin(node)
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
+```
+
+#### Step 3: The AI Agent (Client)
+
+The AI agent will act as the action client. This could be a separate Python script that uses a library like OpenAI's GPT to generate the name to greet. For simplicity, we'll simulate the AI's decision with a simple script.
+
+```python
+import rclpy
+from rclpy.action import ActionClient
+from rclpy.node import Node
+from my_robot_interfaces.action import Greet
+
+class GreeterAI(Node):
+
+    def __init__(self):
+        super().__init__('greeter_ai')
+        self._action_client = ActionClient(self, Greet, 'greet')
+
+    def send_goal(self, name):
+        goal_msg = Greet.Goal()
+        goal_msg.name = name
+
+        self._action_client.wait_for_server()
+
+        return self._action_client.send_goal_async(goal_msg)
+
+def main(args=None):
+    rclpy.init(args=args)
+    ai_agent = GreeterAI()
+
+    # --- AI Logic Would Go Here ---
+    # For example, an LLM could decide to greet "World"
+    future = ai_agent.send_goal("World")
+    # -----------------------------
+
+    rclpy.spin_until_future_complete(ai_agent, future)
+    ai_agent.get_logger().info('Goal sent!')
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
+```
+
+## 3. Integrating with LLMs and Cognitive Planners
+
+The "AI Logic" section in the client script is where the real power of AI comes in. You can integrate various AI techniques here:
+
+- **Large Language Models (LLMs)**: Use LLMs to understand natural language commands from a user and translate them into goals for the ROS 2 system.
+- **Cognitive Planners**: For more complex tasks, a cognitive planner can break down a high-level goal into a sequence of smaller, executable actions. Each of these actions can then be sent to a ROS 2 action server.
+- **Computer Vision**: Use computer vision models to detect objects and people in the environment, and use this information to inform the AI's decisions.
+
+## Conclusion
+
+Integrating AI agents with ROS 2 controllers opens up a world of possibilities for creating intelligent and autonomous robots. By using ROS 2 actions, you can create a clean and robust interface between the high-level decision-making of your AI and the low-level execution of your robot's hardware. This modular approach allows you to develop and test your AI and robotics systems independently, leading to a more efficient and scalable development process.
