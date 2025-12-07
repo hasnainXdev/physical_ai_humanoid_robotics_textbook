@@ -18,7 +18,7 @@ jobs:
       # 2️⃣ Set up Node.js with caching
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 24
           cache: "npm"
           cache-dependency-path: physical-ai-book/package-lock.json
 
