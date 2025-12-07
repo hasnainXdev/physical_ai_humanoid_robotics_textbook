@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import styles from './styles.module.css';
 
 const ChatbotUI = () => {
+    const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
 
@@ -18,31 +19,50 @@ const ChatbotUI = () => {
         //     body: JSON.stringify({ query: input })
         // });
         // const data = await response.json();
-        
+
         const botResponse = `This is a placeholder response for "${input}". In a real implementation, this would be the answer from the RAG system.`;
         setMessages([...newMessages, { text: botResponse, sender: 'bot' }]);
     };
 
     return (
-        <div className={styles.chatbotContainer}>
-            <div className={styles.messageArea}>
-                {messages.map((msg, index) => (
-                    <div key={index} className={`${styles.message} ${styles[msg.sender]}`}>
-                        {msg.text}
+        <>
+            {/* Floating Icon Button */}
+            <button 
+                className={styles.floatingButton}
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                💬
+            </button>
+
+            {/* Chatbot Box */}
+            {isOpen && (
+                <div className={styles.chatbotContainer}>
+                    <div className={styles.header}>
+                        <span>AI Chatbot</span>
+                        <button className={styles.closeBtn} onClick={() => setIsOpen(false)}>✕</button>
                     </div>
-                ))}
-            </div>
-            <div className={styles.inputArea}>
-                <input
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                    placeholder="Ask a question about the book..."
-                />
-                <button onClick={handleSend}>Send</button>
-            </div>
-        </div>
+
+                    <div className={styles.messageArea}>
+                        {messages.map((msg, index) => (
+                            <div key={index} className={`${styles.message} ${styles[msg.sender]}`}>
+                                {msg.text}
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className={styles.inputArea}>
+                        <input
+                            type="text"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                            placeholder="Ask a question..."
+                        />
+                        <button onClick={handleSend}>Send</button>
+                    </div>
+                </div>
+            )}
+        </>
     );
 };
 

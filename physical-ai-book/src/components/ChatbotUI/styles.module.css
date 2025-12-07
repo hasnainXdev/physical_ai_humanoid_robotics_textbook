@@ -1,50 +1,118 @@
+/* Floating Button */
+.floatingButton {
+    position: fixed;
+    bottom: 40px;
+    right: 20px;
+    background: #0084ff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 55px;
+    height: 55px;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    z-index: 9999;
+    transition: transform 0.2s ease;
+}
+
+.floatingButton:hover {
+    transform: scale(1.08);
+}
+
+/* Chatbot Container */
 .chatbotContainer {
     position: fixed;
-    bottom: 20px;
+    bottom: 85px;
     right: 20px;
     width: 350px;
     height: 500px;
     border: 1px solid #ccc;
-    border-radius: 10px;
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
     background-color: white;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
     z-index: 1000;
+
+    /* Smooth appearing animation */
+    animation: fadeIn 0.25s ease-out;
 }
 
+/* Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0px);
+    }
+}
+
+/* Header */
+.header {
+    padding: 12px 15px;
+    background: #0084ff;
+    color: white;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 10px;
+}
+
+.closeBtn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+/* Message Area */
 .messageArea {
     flex-grow: 1;
-    padding: 10px;
+    padding: 12px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
 }
 
+/* Messages */
 .message {
     padding: 8px 12px;
     border-radius: 18px;
     margin-bottom: 8px;
     max-width: 80%;
     word-wrap: break-word;
+    font-size: 15px;
 }
 
 .user {
     background-color: #0084ff;
     color: white;
     align-self: flex-end;
+    border-bottom-right-radius: 4px;
 }
 
 .bot {
-    background-color: #f0f0f0;
+    background-color: #f3f3f3;
     color: black;
     align-self: flex-start;
+    border-bottom-left-radius: 4px;
 }
 
+/* Input Area */
 .inputArea {
     display: flex;
     padding: 10px;
     border-top: 1px solid #ccc;
+    background: #fefefe;
 }
 
 .inputArea input {
@@ -53,6 +121,7 @@
     border-radius: 20px;
     padding: 8px 12px;
     margin-right: 10px;
+    outline: none;
 }
 
 .inputArea button {
@@ -62,4 +131,9 @@
     padding: 8px 16px;
     border-radius: 20px;
     cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.inputArea button:hover {
+    opacity: 0.8;
 }

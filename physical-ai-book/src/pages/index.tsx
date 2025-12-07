@@ -7,9 +7,10 @@ import BetterAuth from '@site/src/components/BetterAuth';
 import Heading from '@theme/Heading';
 
 import styles from './index.module.css';
+import ChatbotUI from '../components/ChatbotUI';
 
 function HomepageHeader() {
-  const {siteConfig} = useDocusaurusContext();
+  const { siteConfig } = useDocusaurusContext();
   return (
     <header className={clsx('hero hero--primary', styles.heroBanner)}>
       <div className="container">
@@ -30,7 +31,7 @@ function HomepageHeader() {
 }
 
 export default function Home(): ReactNode {
-  const {siteConfig} = useDocusaurusContext();
+  const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
       title={`Hello from ${siteConfig.title}`}
@@ -38,8 +39,8 @@ export default function Home(): ReactNode {
       <HomepageHeader />
       <main>
         <BetterAuth />
+        <ChatbotUI />
       </main>
     </Layout>
   );
 }
-
