@@ -31,12 +31,12 @@ To get started with local development, follow these steps:
 
 2.  **Install dependencies:**
     ```bash
-    yarn
+    npm
     ```
 
 3.  **Start the development server:**
     ```bash
-    yarn start
+    npm start
     ```
     This will open a browser window with the website running in development mode.
 
@@ -45,7 +45,7 @@ To get started with local development, follow these steps:
 To build the static website for production, run the following command:
 
 ```bash
-yarn build
+npm build
 ```
 The generated static files will be located in the `build` directory.
 
