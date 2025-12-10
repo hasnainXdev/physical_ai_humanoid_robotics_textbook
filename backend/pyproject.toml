@@ -17,6 +17,7 @@ dependencies = [
     "pypdf2>=3.0.0",
     "slowapi>=0.1.5",
     "openai-agents>=0.6.2",
+    "beautifulsoup4>=4.14.3",
 ]
 
 [project.optional-dependencies]
