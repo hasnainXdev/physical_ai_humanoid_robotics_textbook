@@ -1,0 +1,150 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "RAG Chatbot API",
+    "version": "1.0.0",
+    "description": "API for the RAG-based chatbot that answers queries based on book content"
+  },
+  "servers": [
+    {
+      "url": "/api/v1"
+    }
+  ],
+  "paths": {
+    "/query": {
+      "post": {
+        "summary": "Submit a query to the RAG system",
+        "description": "Process a natural language query and return a response based on the book knowledge base",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QueryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response with answer and citations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query format"
+          },
+          "500": {
+            "description": "Internal server error during query processing"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health check endpoint",
+        "description": "Check if the RAG service is running and healthy",
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "QueryRequest": {
+        "type": "object",
+        "required": ["content"],
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The natural language query from the user",
+            "example": "What are the key principles of humanoid robotics?"
+          }
+        }
+      },
+      "QueryResponse": {
+        "type": "object",
+        "required": ["id", "content", "sourceCitations", "timestamp"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for this response",
+            "example": "resp_abc123"
+          },
+          "content": {
+            "type": "string",
+            "description": "The generated response to the user's query",
+            "example": "The key principles of humanoid robotics include..."
+          },
+          "sourceCitations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SourceCitation"
+            },
+            "description": "References to the book content used to generate the response"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the response was generated",
+            "example": "2025-12-10T10:00:00Z"
+          }
+        }
+      },
+      "SourceCitation": {
+        "type": "object",
+        "required": ["sourceReference", "quotedText"],
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "description": "ID of the document used",
+            "example": "doc_xyz789"
+          },
+          "sourceReference": {
+            "type": "string",
+            "description": "Reference to the location in the book",
+            "example": "Chapter 3, Section 3.2"
+          },
+          "quotedText": {
+            "type": "string",
+            "description": "Relevant excerpt from the source",
+            "example": "The fundamental principle of humanoid robotics is to mimic human motion and behavior..."
+          }
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "required": ["status", "timestamp"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["healthy", "unhealthy"],
+            "description": "Current health status of the service",
+            "example": "healthy"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the health check was performed",
+            "example": "2025-12-10T10:00:00Z"
+          }
+        }
+      }
+    }
+  }
+}
