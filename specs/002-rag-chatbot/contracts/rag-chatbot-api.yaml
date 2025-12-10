@@ -1,0 +1,292 @@
+openapi: 3.0.0
+info:
+  title: RAG Chatbot API
+  description: API for the Retrieval-Augmented Generation chatbot that answers questions about the physical AI humanoid robotics textbook
+  version: 1.0.0
+servers:
+  - url: https://api.rag-chatbot.example.com/v1
+    description: Production server
+  - url: https://staging-api.rag-chatbot.example.com/v1
+    description: Staging server
+
+paths:
+  /chat/query:
+    post:
+      summary: Submit a query to the RAG chatbot
+      description: Process a user's natural language query against the textbook knowledge base
+      operationId: submitQuery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryRequest'
+      responses:
+        '200':
+          description: Successful response with the answer and citations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResponse'
+        '400':
+          description: Bad request - invalid query format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /chat/conversation/{conversationId}:
+    get:
+      summary: Retrieve conversation history
+      description: Get the history of queries and responses for a specific conversation
+      operationId: getConversation
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID of the conversation to retrieve
+      responses:
+        '200':
+          description: Successful retrieval of conversation history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationResponse'
+        '404':
+          description: Conversation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /knowledge/search:
+    post:
+      summary: Search the knowledge base directly
+      description: Perform a search against the knowledge base without chat processing
+      operationId: searchKnowledge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KnowledgeSearchRequest'
+      responses:
+        '200':
+          description: Search results returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KnowledgeSearchResponse'
+        '400':
+          description: Bad request - invalid search parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    QueryRequest:
+      type: object
+      required:
+        - query
+        - session_id
+      properties:
+        query:
+          type: string
+          description: The natural language question to answer
+          example: "Explain the principles of humanoid locomotion"
+        selected_text:
+          type: string
+          description: Optional user-selected text for additional context
+          example: "According to the book, humanoid locomotion requires..."
+        conversation_id:
+          type: string
+          format: uuid
+          description: Optional conversation ID to maintain context
+        session_id:
+          type: string
+          format: uuid
+          description: Session ID to group related queries
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    QueryResponse:
+      type: object
+      required:
+        - response
+        - conversation_id
+        - citations
+      properties:
+        response:
+          type: string
+          description: The generated answer to the query
+          example: "Humanoid locomotion is achieved through..."
+        conversation_id:
+          type: string
+          format: uuid
+          description: The conversation ID for maintaining context
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Citation'
+          description: List of citations for the information provided
+        confidence_score:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Confidence level in the response accuracy
+        model_used:
+          type: string
+          description: The model that generated this response
+
+    ConversationResponse:
+      type: object
+      required:
+        - conversation_id
+        - title
+        - queries
+      properties:
+        conversation_id:
+          type: string
+          format: uuid
+          description: The conversation ID
+        title:
+          type: string
+          description: Auto-generated title for the conversation
+        queries:
+          type: array
+          items:
+            $ref: '#/components/schemas/QueryHistory'
+          description: History of queries and responses in this conversation
+
+    QueryHistory:
+      type: object
+      required:
+        - query
+        - response
+        - timestamp
+      properties:
+        query:
+          type: string
+          description: The original query text
+        response:
+          type: string
+          description: The response generated
+        timestamp:
+          type: string
+          format: date-time
+          description: When this interaction occurred
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Citation'
+          description: Citations for this response
+
+    Citation:
+      type: object
+      required:
+        - text_snippet
+        - source_location
+      properties:
+        text_snippet:
+          type: string
+          description: The specific text from the textbook that supports the response
+        source_location:
+          type: string
+          description: Location in the textbook (e.g., Chapter 4, Page 125)
+        knowledge_chunk_id:
+          type: string
+          format: uuid
+          description: ID of the knowledge chunk referenced
+
+    KnowledgeSearchRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          description: The search query to find relevant knowledge
+        top_k:
+          type: integer
+          description: Number of results to return (default 5)
+          default: 5
+
+    KnowledgeSearchResponse:
+      type: object
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/KnowledgeChunk'
+          description: List of relevant knowledge chunks
+
+    KnowledgeChunk:
+      type: object
+      required:
+        - id
+        - content
+        - source_location
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the knowledge chunk
+        content:
+          type: string
+          description: The text content of the chunk
+        source_location:
+          type: string
+          description: Location in the textbook (e.g., Chapter 4, Page 125)
+        relevance_score:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: How relevant this chunk is to the query
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          description: Additional error details (optional)
