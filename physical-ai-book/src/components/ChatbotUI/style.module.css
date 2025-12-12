@@ -1,0 +1,186 @@
+.chatbotIcon {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    border: none;
+}
+
+.chatbotIcon:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
+}
+
+.chatbotIcon:active {
+    transform: translateY(-2px);
+}
+
+.chatbotIcon::before {
+    content: '💬';
+    font-size: 28px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* Chatbot Window - Modern card with smooth animations */
+.chatbotWindow {
+    position: fixed;
+    bottom: 100px;
+    right: 24px;
+    width: 380px;
+    height: 550px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12), 0 0 1px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    display: none;
+    flex-direction: column;
+    z-index: 999;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(20px) scale(0.95);
+    opacity: 0;
+}
+
+.chatbotWindow.open {
+    display: flex;
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
+
+/* Header - Gradient design with glass effect */
+.chatbotHeader {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: 0.3px;
+    backdrop-filter: blur(10px);
+}
+
+.chatbotHeader .closeBtn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 20px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chatbotHeader .closeBtn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+/* Chat Body - Clean scrollable area */
+.chatbotBody {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    color: black;
+    background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+}
+
+/* Custom scrollbar */
+.chatbotBody::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chatbotBody::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chatbotBody::-webkit-scrollbar-thumb {
+    background: #e0e0e0;
+    border-radius: 10px;
+}
+
+.chatbotBody::-webkit-scrollbar-thumb:hover {
+    background: #bdbdbd;
+}
+
+/* Input Area - Modern input with send button */
+.chatbotInput {
+    display: flex;
+    padding: 16px;
+    background: #ffffff;
+    border-top: 1px solid #f0f0f0;
+    gap: 8px;
+}
+
+.chatbotInput input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid #f0f0f0;
+    border-radius: 12px;
+    outline: none;
+    font-size: 14px;
+    color: rgb(46, 46, 46);
+    transition: all 0.3s ease;
+    background: #fafafa;
+}
+
+.chatbotInput input:focus {
+    border-color: #667eea;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.chatbotInput input::placeholder {
+    color: #9e9e9e;
+}
+
+.chatbotInput button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.chatbotInput button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.chatbotInput button:active {
+    transform: translateY(0);
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+    .chatbotWindow {
+        width: calc(100vw - 32px);
+        right: 16px;
+        bottom: 90px;
+    }
+
+    .chatbotIcon {
+        right: 16px;
+        bottom: 16px;
+    }
+}
+

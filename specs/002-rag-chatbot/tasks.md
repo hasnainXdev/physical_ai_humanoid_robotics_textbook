@@ -11,7 +11,7 @@ Implementation of a RAG (Retrieval-Augmented Generation) chatbot that integrates
 Setup tasks for project initialization and environment configuration.
 
 - [X] T001 Set up project structure with backend and frontend directories per implementation plan
-- [X] T002 Install required dependencies (Python 3.11+, FastAPI, Qdrant client, Langchain, etc.)
+- [X] T002 Install required dependencies (Python 3.11+, FastAPI, Qdrant client, OpenAI Agents SDK, etc.)
 - [X] T003 Set up Qdrant vector database using Docker
 - [X] T004 Configure environment variables for database connection and API keys
 - [X] T005 Initialize backend directory with proper project structure (src, tests, etc.)
