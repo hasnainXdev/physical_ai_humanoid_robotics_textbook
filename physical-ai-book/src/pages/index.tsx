@@ -5,6 +5,7 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import BetterAuth from '@site/src/components/BetterAuth';
 import Heading from '@theme/Heading';
+import ChatBotUI from '../components/ChatbotUI';
 
 import styles from './index.module.css';
 
@@ -38,6 +39,7 @@ export default function Home(): ReactNode {
       <HomepageHeader />
       <main>
         <BetterAuth />
+        <ChatBotUI />
       </main>
     </Layout>
   );

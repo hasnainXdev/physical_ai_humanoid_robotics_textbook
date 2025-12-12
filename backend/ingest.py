@@ -3,114 +3,106 @@ import uuid
 from typing import List
 import requests
 from bs4 import BeautifulSoup
-from agents import OpenAIProvider
+from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams, PointStruct
 from dotenv import load_dotenv
 import argparse
 import gc
 
-# Load environment variables
 load_dotenv()
 
-# Configure OpenAI-compatible client for Gemini
-openai_client = OpenAIProvider(
-    api_key=os.getenv("GEMINI_API_KEY"),
-    base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-)
 
-COLLECTION_NAME = "book_content"
-EMBEDDING_MODEL = "models/embedding-001"
-EMBEDDING_DIM = 768
+print("Loading embedding model... (takes 10–20 seconds first time)")
+model = SentenceTransformer("all-MiniLM-L6-v2")
+print("Model loaded!")
+
+COLLECTION_NAME = "physical-ai-book"
+EMBEDDING_DIM = 384
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
-BATCH_SIZE = 100  # For memory efficiency
+BATCH_SIZE = 64  # Safe for 16 GB RAM
 
 qdrant_client = QdrantClient(
-    url=os.getenv("QDRANT_URL"), api_key=os.getenv("QDRANT_API_KEY")
+    host=os.getenv("QDRANT_URL"), api_key=os.getenv("QDRANT_API_KEY")
 )
 
 
+# Rest of functions same as before...
 def extract_text_from_url(url: str) -> str:
-    """Extract clean text from a URL."""
     try:
-        response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
+        headers = {"User-Agent": "Mozilla/5.0"}
+        response = requests.get(url, headers=headers, timeout=15)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
-        for element in soup(["script", "style", "header", "footer", "nav"]):
-            element.decompose()
-        main_content = soup.find("main") or soup.find("article") or soup.body
-        text = main_content.get_text(separator="\n", strip=True) if main_content else ""
+        for tag in soup(["script", "style", "nav", "header", "footer"]):
+            tag.decompose()
+        text = (
+            soup.find("main") or soup.find("article") or soup.body or soup
+        ).get_text(separator="\n", strip=True)
         return text
     except Exception as e:
-        print(f"Error extracting from {url}: {e}")
+        print(f"Error {url}: {e}")
         return ""
 
 
-def chunk_text_generator(text: str):
-    """Generator for memory-efficient chunking."""
+def chunk_text(text: str):
     start = 0
     while start < len(text):
-        end = min(start + CHUNK_SIZE, len(text))
+        end = start + CHUNK_SIZE
         yield text[start:end]
         start = end - CHUNK_OVERLAP
+        if start >= len(text):
+            break
 
 
-def ingest_textbook(urls: List[str]):
-    """Ingest content from provided URLs into Qdrant."""
+def ingest(urls: List[str]):
+    # Create collection with correct dimension
     if not qdrant_client.get_collection(COLLECTION_NAME):
         qdrant_client.create_collection(
             collection_name=COLLECTION_NAME,
             vectors_config=VectorParams(size=EMBEDDING_DIM, distance=Distance.COSINE),
         )
 
-    total_chunks = 0
+    total = 0
+    batch = []
+
     for url in urls:
         text = extract_text_from_url(url)
         if not text:
             continue
 
-        batch_points = []
-        for chunk in chunk_text_generator(text):
-            embedding = (
-                openai_client.embeddings.create(input=chunk, model=EMBEDDING_MODEL)
-                .data[0]
-                .embedding
-            )
-            batch_points.append(
+        for chunk in chunk_text(text):
+            embedding = model.encode(
+                chunk, normalize_embeddings=True
+            ).tolist()  # ← super fast
+            batch.append(
                 PointStruct(
                     id=str(uuid.uuid4()),
                     vector=embedding,
-                    payload={"text": chunk, "source_url": url},
+                    payload={"text": chunk, "url": url},
                 )
             )
-            total_chunks += 1
+            total += 1
 
-            if len(batch_points) >= BATCH_SIZE:
-                qdrant_client.upsert(
-                    collection_name=COLLECTION_NAME, points=batch_points
-                )
-                batch_points = []
+            if len(batch) >= BATCH_SIZE:
+                qdrant_client.upsert(COLLECTION_NAME, batch)
+                batch.clear()
                 gc.collect()
 
-        if batch_points:
-            qdrant_client.upsert(collection_name=COLLECTION_NAME, points=batch_points)
-            gc.collect()
-
+        # Clear memory after each page
         del text
         gc.collect()
 
-    print(f"Ingested {total_chunks} chunks from {len(urls)} URLs into Qdrant.")
+    if batch:
+        qdrant_client.upsert(COLLECTION_NAME, batch)
+
+    print(f"Done! Ingested {total} chunks using all-MiniLM-L6-v2")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Ingest textbook site into Qdrant.")
-    parser.add_argument(
-        "--url",
-        type=str,
-        required=True,
-        help="Comma-separated URLs (e.g., https://yoursite.com/page1,https://yoursite.com/page2)",
-    )
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--url", type=str, required=True, help="Comma-separated URLs")
     args = parser.parse_args()
     urls = [u.strip() for u in args.url.split(",")]
-    ingest_textbook(urls)
+    ingest(urls)
