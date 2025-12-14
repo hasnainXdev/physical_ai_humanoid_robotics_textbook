@@ -1,11 +1,7 @@
-import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
-
-const { siteConfig: { customFields } } = useDocusaurusContext();
-
-const API_BASE_URL = customFields.backendUrl;
-
 // Export auth-related functions
 export const signIn = async (email: string, password: string) => {
+  // Use the backend URL from window object or fallback to localhost
+  const API_BASE_URL = (window as any).__BACKEND_URL__ || process.env.FASTAPI_BASE_URL || 'http://localhost:8000';
   try {
     const response = await fetch(`${API_BASE_URL}/api/auth/sign-in`, {
       method: 'POST',
@@ -29,6 +25,8 @@ export const signIn = async (email: string, password: string) => {
 };
 
 export const signOut = async () => {
+  // Use the backend URL from window object or fallback to localhost
+  const API_BASE_URL = (window as any).__BACKEND_URL__ || process.env.FASTAPI_BASE_URL || 'http://localhost:8000';
   try {
     const response = await fetch(`${API_BASE_URL}/api/auth/sign-out`, {
       method: 'POST',
@@ -48,6 +46,8 @@ export const signOut = async () => {
 };
 
 export const signUp = async (email: string, password: string, name: string) => {
+  // Use the backend URL from window object or fallback to localhost
+  const API_BASE_URL = (window as any).__BACKEND_URL__ || process.env.FASTAPI_BASE_URL || 'http://localhost:8000';
   try {
     const response = await fetch(`${API_BASE_URL}/api/auth/sign-up`, {
       method: 'POST',
@@ -71,6 +71,8 @@ export const signUp = async (email: string, password: string, name: string) => {
 };
 
 export const getAuthSession = async () => {
+  // Use the backend URL from window object or fallback to localhost
+  const API_BASE_URL = (window as any).__BACKEND_URL__ || process.env.FASTAPI_BASE_URL || 'http://localhost:8000';
   try {
     const response = await fetch(`${API_BASE_URL}/api/auth/session`, {
       method: 'GET',

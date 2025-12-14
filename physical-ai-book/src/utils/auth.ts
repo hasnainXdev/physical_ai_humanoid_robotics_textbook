@@ -1,9 +1,6 @@
 // Utility functions for authentication
 import { AuthAction } from '../contexts/AuthContext';
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
-
-const { siteConfig: { customFields } } = useDocusaurusContext();
 /**
  * Validate password strength according to spec requirements
  */
@@ -42,11 +39,31 @@ export const validatePasswordStrength = (password: string): { isValid: boolean; 
 };
 
 /**
+ * Get the backend API URL - fallback to environment variable or default
+ */
+const getBackendUrl = () => {
+  // Try multiple methods to get the backend URL
+  // 1. Check if available in window object (client-side)
+  if (typeof window !== 'undefined' && (window as any).__BACKEND_URL__) {
+    return (window as any).__BACKEND_URL__;
+  }
+
+  // 2. Check if process.env is available (Node.js during build)
+  if (typeof process !== 'undefined' && process.env.FASTAPI_BASE_URL) {
+    return process.env.FASTAPI_BASE_URL;
+  }
+
+  // 3. Fallback to default
+  return 'http://localhost:8000';
+};
+
+/**
  * Request password reset
  */
 export const requestPasswordReset = async (email: string): Promise<{ success: boolean; message: string }> => {
+  const API_BASE_URL = getBackendUrl();
   try {
-    const response = await fetch(`${customFields.backendUrl}/api/auth/reset-password/request`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/reset-password/request`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -73,8 +90,9 @@ export const confirmPasswordReset = async (
   token: string,
   newPassword: string
 ): Promise<{ success: boolean; message: string }> => {
+  const API_BASE_URL = getBackendUrl();
   try {
-    const response = await fetch(`${customFields.backendUrl}/api/auth/reset-password/confirm`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/reset-password/confirm`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

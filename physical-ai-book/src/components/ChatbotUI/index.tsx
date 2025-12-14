@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import styles from "./style.module.css";
 
 const ChatBotUI = () => {
@@ -9,7 +8,19 @@ const ChatBotUI = () => {
     const [input, setInput] = useState('');
     const bodyRef = useRef<HTMLDivElement>(null);
 
-    const { siteConfig: { customFields } } = useDocusaurusContext();
+    // Get backend URL function
+    const getBackendUrl = () => {
+        // 1. Check window object during runtime
+        if (typeof window !== 'undefined' && (window as any).__BACKEND_URL__) {
+            return (window as any).__BACKEND_URL__;
+        }
+        // 2. Check process.env during build time
+        if (typeof process !== 'undefined' && process.env.FASTAPI_BASE_URL) {
+            return process.env.FASTAPI_BASE_URL;
+        }
+        // 3. Fallback to default
+        return 'http://localhost:8000';
+    };
 
     const toggleChat = () => setIsOpen(!isOpen);
 
@@ -23,7 +34,7 @@ const ChatBotUI = () => {
 
         try {
             // Call backend API
-            const response = await fetch(`${customFields.backendUrl}/chat`, {
+            const response = await fetch(`${getBackendUrl()}/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ question }),
