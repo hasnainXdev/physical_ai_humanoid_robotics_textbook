@@ -1,26 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import styles from "./style.module.css";
+import { getBackendUrl } from '@site/src/config/apiConfig';
 
 const ChatBotUI = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([{ text: 'Welcome! Ask me anything about Physical AI Humanoid Robotics.', isBot: true }]);
     const [input, setInput] = useState('');
     const bodyRef = useRef<HTMLDivElement>(null);
-
-    // Get backend URL function
-    const getBackendUrl = () => {
-        // 1. Check window object during runtime
-        if (typeof window !== 'undefined' && (window as any).__BACKEND_URL__) {
-            return (window as any).__BACKEND_URL__;
-        }
-        // 2. Check process.env during build time
-        if (typeof process !== 'undefined' && process.env.FASTAPI_BASE_URL) {
-            return process.env.FASTAPI_BASE_URL;
-        }
-        // 3. Fallback to default
-        return 'http://localhost:8000';
-    };
 
     const toggleChat = () => setIsOpen(!isOpen);
 
