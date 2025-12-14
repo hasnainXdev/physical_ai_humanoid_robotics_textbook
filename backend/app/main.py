@@ -27,7 +27,7 @@ gemini_client = AsyncOpenAI(
 
 # this is requird when setting up external model
 model = OpenAIChatCompletionsModel(
-    model="openai/gpt-oss-120b:free", openai_client=gemini_client
+    model="google/gemini-2.5-flash-preview-09-2025", openai_client=gemini_client
 )
 
 app = FastAPI(
@@ -38,7 +38,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["https://physical-ai-humanoid-robotics-textb-tau.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

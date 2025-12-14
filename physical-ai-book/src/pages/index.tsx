@@ -3,7 +3,6 @@ import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
-import BetterAuth from '@site/src/components/BetterAuth';
 import Heading from '@theme/Heading';
 import ChatBotUI from '../components/ChatbotUI';
 
@@ -38,8 +37,6 @@ export default function Home(): ReactNode {
       description="Description will go into a meta tag in <head />">
       <HomepageHeader />
       <main>
-        <BetterAuth />
-        <ChatBotUI />
       </main>
     </Layout>
   );
