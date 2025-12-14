@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import styles from "./style.module.css";
-import { getBackendUrl } from '@site/src/config/apiConfig';
 
 const ChatBotUI = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -21,7 +20,7 @@ const ChatBotUI = () => {
 
         try {
             // Call backend API
-            const response = await fetch(`${getBackendUrl()}/chat`, {
+            const response = await fetch(`https://hasnaindeveloper-fastapi-backend-service.hf.space/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ question }),
