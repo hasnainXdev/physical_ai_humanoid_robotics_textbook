@@ -208,9 +208,3 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
-
-## Active Technologies
-- Qdrant vector database, existing Docusaurus project files or N/A (002-rag-chatbot)
-
-## Recent Changes
-- 002-rag-chatbot: Added Qdrant vector database, existing Docusaurus project files or N/A
