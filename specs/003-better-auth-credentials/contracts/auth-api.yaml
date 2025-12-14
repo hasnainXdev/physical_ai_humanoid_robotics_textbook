@@ -1,0 +1,209 @@
+# Authentication API Contract
+
+## User Registration
+**Endpoint**: `POST /api/auth/register`
+**Description**: Registers a new user with username and password
+
+### Request
+```json
+{
+  "username": "string (3-30 characters, alphanumeric and underscores)",
+  "email": "string (optional, valid email format)",
+  "password": "string (minimum 8 characters with uppercase, lowercase, and number)"
+}
+```
+
+### Response (Success)
+```json
+{
+  "success": true,
+  "message": "User registered successfully",
+  "data": {
+    "user": {
+      "id": "string (UUID)",
+      "username": "string",
+      "email": "string",
+      "createdAt": "ISO date string"
+    },
+    "tokens": {
+      "accessToken": "JWT string",
+      "expiresAt": "ISO date string"
+    }
+  }
+}
+```
+
+### Response (Error)
+```json
+{
+  "success": false,
+  "message": "Error message",
+  "error": "Error details"
+}
+```
+
+## User Login
+**Endpoint**: `POST /api/auth/login`
+**Description**: Authenticates user with credentials and returns access token
+
+### Request
+```json
+{
+  "username": "string",
+  "password": "string"
+}
+```
+
+### Response (Success)
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "user": {
+      "id": "string (UUID)",
+      "username": "string",
+      "email": "string"
+    },
+    "tokens": {
+      "accessToken": "JWT string",
+      "expiresAt": "ISO date string",
+      "refreshToken": "JWT string (optional)"
+    }
+  }
+}
+```
+
+### Response (Error)
+```json
+{
+  "success": false,
+  "message": "Invalid credentials",
+  "error": "Error details"
+}
+```
+
+## User Logout
+**Endpoint**: `POST /api/auth/logout`
+**Description**: Logs out the current user and invalidates tokens
+
+### Headers
+```
+Authorization: Bearer {accessToken}
+```
+
+### Response (Success)
+```json
+{
+  "success": true,
+  "message": "Logout successful"
+}
+```
+
+### Response (Error)
+```json
+{
+  "success": false,
+  "message": "Error message",
+  "error": "Error details"
+}
+```
+
+## Get Current User
+**Endpoint**: `GET /api/auth/me`
+**Description**: Returns the currently authenticated user's information
+
+### Headers
+```
+Authorization: Bearer {accessToken}
+```
+
+### Response (Success)
+```json
+{
+  "success": true,
+  "data": {
+    "id": "string (UUID)",
+    "username": "string",
+    "email": "string",
+    "createdAt": "ISO date string",
+    "lastLoginAt": "ISO date string"
+  }
+}
+```
+
+## Password Reset Request
+**Endpoint**: `POST /api/auth/reset-password/request`
+**Description**: Requests a password reset, sends reset token to user's email
+
+### Request
+```json
+{
+  "email": "string (user's email)"
+}
+```
+
+### Response (Success)
+```json
+{
+  "success": true,
+  "message": "Password reset email sent"
+}
+```
+
+## Password Reset
+**Endpoint**: `POST /api/auth/reset-password/confirm`
+**Description**: Confirms a password reset with token and new password
+
+### Request
+```json
+{
+  "token": "string (reset token)",
+  "newPassword": "string (new password)"
+}
+```
+
+### Response (Success)
+```json
+{
+  "success": true,
+  "message": "Password reset successfully"
+}
+```
+
+## Authentication Error Responses
+
+### 400 Bad Request
+```json
+{
+  "success": false,
+  "message": "Validation error",
+  "error": "Details about validation error"
+}
+```
+
+### 401 Unauthorized
+```json
+{
+  "success": false,
+  "message": "Authentication required",
+  "error": "Details about auth failure"
+}
+```
+
+### 409 Conflict
+```json
+{
+  "success": false,
+  "message": "Conflict error",
+  "error": "Details about conflict (e.g. username already exists)"
+}
+```
+
+### 500 Server Error
+```json
+{
+  "success": false,
+  "message": "Internal server error",
+  "error": "Error details"
+}
