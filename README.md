@@ -7,8 +7,6 @@ This repository contains the source code for the "Physical AI & Humanoid Robotic
 This project aims to provide a comprehensive and engaging learning experience for students and enthusiasts of robotics and artificial intelligence. The textbook is built as a static website with interactive features, including:
 
 *   **RAG Chatbot:** An integrated chatbot that can answer questions about the book's content.
-*   **User Personalization:** The content can be tailored to the user's hardware and software background.
-*   **Urdu Translation:** The entire book can be translated into Urdu with RTL support.
 *   **Interactive Diagrams and Code Samples:** The book is enriched with diagrams and executable code samples to enhance understanding.
 
 ## Tech Stack
